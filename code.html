@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kerala Yatra // Digital Student Concession Pass</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Inter Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with custom config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-fixed": "#121b2f",
+            "surface-container-low": "#eff4ff",
+            "on-tertiary-fixed-variant": "#005236",
+            "on-tertiary": "#ffffff",
+            "surface-container-high": "#dce9ff",
+            "secondary-container": "#39b8fd",
+            "on-tertiary-container": "#009668",
+            "on-secondary-container": "#004666",
+            "error": "#ba1a1a",
+            "primary-fixed-dim": "#bdc6e0",
+            "on-background": "#0b1c30",
+            "on-primary-fixed-variant": "#3d475c",
+            "error-container": "#ffdad6",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#6ffbbe",
+            "surface-container-lowest": "#ffffff",
+            "tertiary": "#000000",
+            "secondary-fixed": "#c9e6ff",
+            "on-secondary-fixed-variant": "#004c6e",
+            "on-tertiary-fixed": "#002113",
+            "outline": "#76777d",
+            "surface-variant": "#d3e4fe",
+            "surface-dim": "#cbdbf5",
+            "on-error": "#ffffff",
+            "primary-fixed": "#d9e2fd",
+            "inverse-on-surface": "#eaf1ff",
+            "surface-container": "#e5eeff",
+            "on-surface": "#0b1c30",
+            "tertiary-container": "#002113",
+            "on-secondary-fixed": "#001e2f",
+            "secondary": "#006591",
+            "surface-bright": "#f8f9ff",
+            "tertiary-fixed-dim": "#4edea3",
+            "primary": "#000000",
+            "on-primary-container": "#7a849c",
+            "outline-variant": "#c6c6cd",
+            "primary-container": "#121b2f",
+            "on-surface-variant": "#45474d",
+            "surface": "#f8f9ff",
+            "inverse-surface": "#213145",
+            "inverse-primary": "#bdc6e0",
+            "on-error-container": "#93000a",
+            "on-secondary": "#ffffff",
+            "background": "#f8f9ff",
+            "surface-tint": "#555e75",
+            "surface-container-highest": "#d3e4fe",
+            "secondary-fixed-dim": "#89ceff"
+          },
+          "borderRadius": {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "gutter-desktop": "1.5rem",
+            "margin-desktop": "3rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem",
+            "margin-tablet": "2rem",
+            "space-md": "1rem",
+            "space-sm": "0.5rem"
+          },
+          "fontFamily": {
+            "headline-sm": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-lg-mobile": ["Inter"],
+            "label-md": ["Inter"],
+            "body-md": ["Inter"],
+            "numeric-metric": ["Inter"],
+            "body-lg": ["Inter"],
+            "label-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "label-caps": ["Inter"],
+            "body-sm": ["Inter"]
+          },
+          "fontSize": {
+            "headline-sm": ["1.125rem", { "lineHeight": "1.35", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-lg": ["2rem", { "lineHeight": "1.2", "letterSpacing": "-0.025em", "fontWeight": "700" }],
+            "display-lg": ["3rem", { "lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "headline-lg-mobile": ["1.625rem", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "label-md": ["0.75rem", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-md": ["0.875rem", { "lineHeight": "1.45", "letterSpacing": "0em", "fontWeight": "400" }],
+            "numeric-metric": ["2.25rem", { "lineHeight": "1", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "body-lg": ["1rem", { "lineHeight": "1.5", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-lg": ["0.875rem", { "lineHeight": "1.25", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "headline-md": ["1.25rem", { "lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "label-caps": ["0.6875rem", { "lineHeight": "1", "letterSpacing": "0.08em", "fontWeight": "700" }],
+            "body-sm": ["0.75rem", { "lineHeight": "1.4", "letterSpacing": "0em", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .perspective-1000 {
+      perspective: 1200px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    .hologram-shimmer {
+      background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.3) 36%, rgba(57, 184, 253, 0.45) 45%, rgba(111, 251, 190, 0.4) 55%, transparent 75%);
+      mix-blend-mode: overlay;
+    }
+    @keyframes laserScan {
+      0% { top: 0%; opacity: 0.8; }
+      50% { top: 96%; opacity: 1; }
+      100% { top: 0%; opacity: 0.8; }
+    }
+    .animate-laser {
+      animation: laserScan 2.4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-secondary selection:text-on-primary min-h-screen relative overflow-x-hidden font-body-md">
+<!-- Background Animated WebGL Shader: Shape Waves Field -->
+<!-- STITCH_SHADER_START:ANIMATION_10 class="fixed inset-0 w-full h-full pointer-events-none -z-10" -->
+<div class="fixed inset-0 w-full h-full pointer-events-none -z-10" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_10" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_10');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+// Simplex-style procedural noise helper
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+float snoise(vec2 v) {
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy));
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod289(i);
+  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m;
+  m = m*m;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+
+// 2D Rotation
+vec2 rotate(vec2 p, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+}
+
+// Distance functions for tiny geometric shapes
+// Circle
+float sdCircle(vec2 p, float r) {
+    return length(p) - r;
+}
+
+// Equilateral Triangle
+float sdEquilateralTriangle(vec2 p, float r) {
+    const float k = sqrt(3.0);
+    p.x = abs(p.x) - r;
+    p.y = p.y + r / k;
+    if(p.x + k*p.y > 0.0) p = vec2(p.x - k*p.y, -k*p.x - p.y) / 2.0;
+    p.x -= clamp(p.x, -2.0*r, 0.0);
+    return -length(p) * sign(p.y);
+}
+
+// Rounded Box / subtle square
+float sdBox(vec2 p, vec2 b, float r) {
+    vec2 q = abs(p) - b + r;
+    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+}
+
+// Multi-layer Shape Wave field rendering
+vec4 renderShapeLayer(vec2 st, vec2 mouseNorm, float time, float layerDepth, vec2 res) {
+    // Aspect correction
+    vec2 uv = (gl_FragCoord.xy - 0.5 * res.xy) / min(res.x, res.y);
+    
+    // Parallax depth offset based on mouse & layer
+    vec2 parallax = (mouseNorm - 0.5) * (0.045 * layerDepth);
+    uv += parallax;
+
+    // Organic wave field deformation
+    float t = time * (0.18 + layerDepth * 0.08);
+    
+    // Multi-frequency wave displacement - organic flowing waves, not rigid
+    float waveX = sin(uv.y * 3.8 + t * 1.2) * 0.12 + snoise(uv * 2.2 + vec2(t * 0.4, t * 0.2)) * 0.16;
+    float waveY = cos(uv.x * 3.2 - t * 0.9) * 0.14 + snoise(uv * 1.8 - vec2(t * 0.3, -t * 0.4)) * 0.15;
+    
+    // Mouse physical interaction force (repulsion + wave swirl)
+    vec2 mouseUV = (u_mouse - 0.5 * res.xy) / min(res.x, res.y);
+    vec2 toMouse = uv - mouseUV;
+    float distMouse = length(toMouse);
+    float mouseForce = smoothstep(0.48, 0.0, distMouse);
+    
+    // Push shapes away softly and rotate wave crests
+    vec2 mouseDisp = normalize(toMouse + 1e-4) * mouseForce * 0.16;
+    uv += mouseDisp;
+    
+    // Grid coordinate space deformed by continuous wave flow
+    vec2 deformedUV = uv + vec2(waveX, waveY);
+    
+    // Grid cell density adjusted per layer
+    float scale = 32.0 + layerDepth * 14.0;
+    vec2 gridUV = deformedUV * scale;
+    vec2 cellId = floor(gridUV);
+    vec2 localUV = fract(gridUV) - 0.5;
+    
+    // Deterministic random per cell
+    float cellRand = fract(sin(dot(cellId, vec2(12.9898, 78.233))) * 43758.5453);
+    float cellRand2 = fract(sin(dot(cellId, vec2(39.346, 11.135))) * 23421.631);
+    
+    // Filter out shapes to form organic serpentine wave ribbons rather than a dense grid
+    float waveDensityMask = snoise(cellId * 0.08 + vec2(t * 0.35, t * 0.25));
+    // Soft threshold creating flowing bands of shapes
+    float shapePresence = smoothstep(-0.15, 0.35, waveDensityMask);
+    if (shapePresence < 0.15 && cellRand > 0.35) {
+        return vec4(0.0);
+    }
+    
+    // Shape type selection based on cell random value:
+    // 0.0 - 0.45: Circle
+    // 0.45 - 0.78: Triangle (rotating)
+    // 0.78 - 1.00: Subtle rounded square
+    float shapeType = cellRand;
+    float size = (0.16 + cellRand2 * 0.10) * (0.75 + 0.25 * sin(t * 2.0 + cellRand * 6.28));
+    
+    // Rotation for triangles and squares
+    float rotAngle = t * (cellRand - 0.5) * 2.5 + distMouse * 3.0;
+    vec2 rotLocal = rotate(localUV, rotAngle);
+    
+    float d = 1.0;
+    if (shapeType < 0.45) {
+        // Circle with breathing scale
+        d = sdCircle(localUV, size * 0.85);
+    } else if (shapeType < 0.78) {
+        // Triangle
+        d = sdEquilateralTriangle(rotLocal, size * 0.9);
+    } else {
+        // Subtle rounded square
+        d = sdBox(rotLocal, vec2(size * 0.65), size * 0.15);
+    }
+    
+    // Anti-aliased rendering
+    float aa = 1.8 / (scale * min(res.x, res.y) / 600.0);
+    float shapeAlpha = smoothstep(aa, -aa, d);
+    
+    // Shape outline or solid delicate fill
+    float isWire = step(0.65, cellRand2);
+    if (isWire > 0.5) {
+        float wireD = abs(d + size * 0.1) - 0.025;
+        shapeAlpha = max(shapeAlpha * 0.3, smoothstep(aa, -aa, wireD));
+    }
+    
+    // Soft subtle color palette:
+    // Pale blue (#8fb2e8), Muted cyan (#7dd3fc), Soft lavender (#c4b5fd), Pale silver (#cbd5e1)
+    vec3 colCircle = vec3(0.56, 0.70, 0.91);    // Soft pale blue
+    vec3 colTri = vec3(0.48, 0.78, 0.92);       // Muted cyan
+    vec3 colBox = vec3(0.74, 0.71, 0.95);       // Soft delicate lavender
+    vec3 colSilver = vec3(0.72, 0.76, 0.84);    // Refined silver gray
+    
+    vec3 shapeCol = mix(colCircle, colTri, smoothstep(0.2, 0.6, cellRand));
+    shapeCol = mix(shapeCol, colBox, smoothstep(0.6, 0.9, cellRand));
+    shapeCol = mix(shapeCol, colSilver, smoothstep(0.85, 1.0, cellRand2));
+    
+    // Fade opacity gracefully near mouse & at depth
+    float alpha = shapeAlpha * shapePresence * (0.28 + layerDepth * 0.22);
+    
+    // Magnetic boost: slightly brighter near mouse
+    alpha *= (1.0 + mouseForce * 0.55);
+    
+    return vec4(shapeCol, alpha);
+}
+
+void main() {
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+    vec2 mouseNorm = u_mouse / u_resolution.xy;
+    
+    // Background base: Warm ivory / pearl white / soft luminous mist
+    vec3 bgIvory = vec3(0.978, 0.982, 0.988);
+    vec3 bgSoftMist = vec3(0.950, 0.962, 0.978);
+    
+    // Subtle ambient gradient across screen
+    float bgGradient = st.y * 0.5 + st.x * 0.3;
+    vec3 baseColor = mix(bgIvory, bgSoftMist, bgGradient);
+    
+    // Multi-layer Shape Waves (Depth layering: Far, Mid, Near)
+    // Layer 1: Far background (smaller, softer, gentle parallax)
+    vec4 layerFar = renderShapeLayer(st, mouseNorm, u_time, 0.4, u_resolution);
+    
+    // Layer 2: Mid wave layer (main shape waves flowing ribbons)
+    vec4 layerMid = renderShapeLayer(st, mouseNorm, u_time, 0.8, u_resolution);
+    
+    // Layer 3: Foreground accent wave ribbons
+    vec4 layerNear = renderShapeLayer(st, mouseNorm, u_time, 1.2, u_resolution);
+    
+    // Composite shape layers with alpha blending
+    vec3 compColor = baseColor;
+    compColor = mix(compColor, layerFar.rgb, layerFar.a * 0.45);
+    compColor = mix(compColor, layerMid.rgb, layerMid.a * 0.65);
+    compColor = mix(compColor, layerNear.rgb, layerNear.a * 0.80);
+    
+    // Clean legibility vignette - keeps center & text zones clear & crisp
+    float centerClean = smoothstep(0.1, 0.85, length(st - vec2(0.48, 0.45)));
+    compColor = mix(baseColor * 0.995 + vec3(0.005), compColor, 0.72 + 0.28 * centerClean);
+    
+    gl_FragColor = vec4(compColor, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_10 -->
+<!-- Shared Component: TopNavBar (Exact Schema Translation) -->
+<header class="bg-surface/90 dark:bg-surface-container-highest/90 backdrop-blur-md text-primary dark:text-inverse-primary border-b border-outline-variant/30 dark:border-outline-variant/10 shadow-sm dark:shadow-none fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-space-md py-space-sm max-w-7xl mx-auto w-full">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[18px]">commute</span>
+</div>
+<div>
+<span class="text-headline-sm font-headline-sm font-bold tracking-tight text-on-surface dark:text-surface-bright block">UniTransit Pass</span>
+<span class="text-label-caps font-label-caps tracking-widest text-on-surface-variant block -mt-0.5">GOVT. OF KERALA • HIGHER ED</span>
+</div>
+</div>
+<!-- Desktop Global Nav Links -->
+<div class="hidden md:flex items-center space-x-6 text-label-md font-label-md">
+<a class="text-secondary dark:text-secondary-fixed font-bold flex items-center space-x-1.5 transition-colors" href="#hero-pass">
+<span class="material-symbols-outlined text-[16px]">credit_card</span>
+<span>Pass</span>
+</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors flex items-center space-x-1.5" href="#timeline-section">
+<span class="material-symbols-outlined text-[16px]">alt_route</span>
+<span>Routes</span>
+</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors flex items-center space-x-1.5" href="#verify-section">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>Verification</span>
+</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors flex items-center space-x-1.5" href="#services-section">
+<span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
+<span>Services</span>
+</a>
+</div>
+<!-- Trailing Actions & Profile Avatar -->
+<div class="flex items-center space-x-3">
+<div class="hidden sm:flex items-center space-x-1.5 px-3 py-1 bg-surface-container rounded-full border border-outline-variant/30">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+<span class="text-label-caps font-label-caps text-on-tertiary-container tracking-wider">KERALA IDENT • ACTIVE NFC</span>
+</div>
+<button aria-label="Notifications" class="p-2 rounded-full hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95 text-on-surface">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button aria-label="Settings" class="p-2 rounded-full hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95 text-on-surface">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full ring-2 ring-secondary/30 overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Official verified student identification photograph of Shreeram Sandesh in high resolution, shot against a crisp off-white studio background with soft natural lighting, showcasing modern collegiate portrait aesthetic with razor sharp details and clear biometric verification standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9ukqfRlV3BjW5BDnEj1pkMykcGD64BSVB2IEG2tsIF7nJLpHk0dOlPhLQJB0bR8ciE7SM--mLsRN6U5paQfAOhjGCUFsdCiK7LCo-Oq1gJJuQqEk5lwpIcrj20FqQTJVUpKC_BuY7Zn_EHuxxbhkF4uQg1Tq9hktM61y5kI4kWC0qgLi-DkWqqnb0w4yWHWHsjWg_eJD-1iXSULhbVOQDvXAgTYL-6LCAM0ZETfOczKC_NAJwAYZ3"/>
+</div>
+</div>
+</header>
+<!-- MAIN CANVAS -->
+<main class="pt-24 pb-28 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto space-y-16 lg:space-y-24">
+<!-- 1. HERO SECTION (Cinematic WOW Moment) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center min-h-[calc(100vh-8rem)]" id="hero-pass">
+<!-- LEFT COLUMN: Content Hierarchy -->
+<div class="lg:col-span-6 space-y-6">
+<!-- Sub-tag Pill -->
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/40 shadow-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-on-tertiary-container animate-ping"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant tracking-wider">DIGITAL STUDENT CONCESSION • KERALA MOTOR VEHICLES &amp; METRO DEPT</span>
+</div>
+<!-- Hero Headline -->
+<h1 class="text-headline-lg-mobile md:text-display-lg font-display-lg text-on-background tracking-tight">
+          YOUR PASS.<br/>
+<span class="bg-gradient-to-r from-on-background via-secondary to-on-tertiary-container bg-clip-text text-transparent">YOUR JOURNEY.</span>
+</h1>
+<!-- Supporting fintech copy -->
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-xl leading-relaxed">
+          One unified digital pass for smarter, simpler student travel across KSRTC ordinary &amp; fast passenger fleets, Kochi Metro Line 1, and regional Kerala student transit networks. Zero physical tokens. Pure NFC speed.
+        </p>
+<!-- CTAs & Route Chip -->
+<div class="space-y-4 pt-2">
+<div class="flex flex-wrap gap-4 items-center">
+<a class="relative group overflow-hidden bg-primary-container text-on-primary px-8 h-[52px] rounded-full inline-flex items-center justify-center space-x-2.5 font-label-lg text-label-lg shadow-md hover:shadow-xl active:scale-95 transition-all duration-200" href="#services-section">
+<span class="relative z-10">GET YOUR PASS</span>
+<span class="material-symbols-outlined text-[18px] relative z-10">arrow_forward</span>
+<div class="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+</a>
+<a class="bg-surface-container-lowest text-on-surface border border-outline-variant/50 hover:border-secondary px-7 h-[52px] rounded-full inline-flex items-center justify-center space-x-2 font-label-lg text-label-lg shadow-sm hover:bg-surface-container-low active:scale-95 transition-all duration-200" href="#verify-section">
+<span class="material-symbols-outlined text-[18px] text-secondary">verified_user</span>
+<span>VERIFY PASS</span>
+</a>
+</div>
+<!-- Route Badge Chip -->
+<div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface-container border border-outline-variant/30 text-body-sm font-body-sm text-on-surface">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-label-caps font-label-caps font-bold">LINE K-04</span>
+<span class="font-medium">POPULAR ROUTE: THRISSUR ⇄ ERNAKULAM (Via Aluva &amp; Angamaly)</span>
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container">check_circle</span>
+</div>
+</div>
+<!-- Micro Ledger Metric Indicators -->
+<div class="grid grid-cols-3 gap-4 pt-4 border-t border-outline-variant/30">
+<div>
+<div class="text-numeric-metric font-numeric-metric text-on-background">81.5%</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider">Govt. Travel Subsidy</div>
+</div>
+<div>
+<div class="text-numeric-metric font-numeric-metric text-secondary">₹12</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider">Subsidy Daily Fare</div>
+</div>
+<div>
+<div class="text-numeric-metric font-numeric-metric text-on-tertiary-container">0.3s</div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-wider">NFC Turnstile Gate</div>
+</div>
+</div>
+</div>
+<!-- RIGHT / CENTER COLUMN — THE PREMIUM 3D CONCESSION PASS -->
+<div class="lg:col-span-6 flex flex-col items-center justify-center perspective-1000 py-6 relative">
+<!-- Interactive Magnetic Aura Glow & Contact Shadow on Wave Field -->
+<div class="absolute -inset-10 bg-radial from-secondary/15 via-secondary-container/10 to-transparent blur-2xl opacity-60 pointer-events-none transition-opacity duration-500 group-hover:opacity-90 rounded-full" id="card-aura"></div>
+<!-- Card Shell with 3D Transform and Interactive Light Dynamics -->
+<div class="relative w-full max-w-[420px] aspect-[1/1.58] cursor-pointer group select-none transition-transform duration-100 ease-out" id="card-scene">
+<!-- Delicate Ground Contact Shadow -->
+<div class="absolute -bottom-7 inset-x-8 h-8 bg-slate-900/25 blur-xl rounded-full transition-transform duration-300 pointer-events-none"></div>
+<div class="w-full h-full relative transform-style-3d transition-transform duration-700 rounded-3xl shadow-2xl" id="card-flipper">
+<!-- ================= FRONT OF CARD ================= -->
+<div class="absolute inset-0 w-full h-full rounded-3xl bg-[#0b1528] text-white p-6 flex flex-col justify-between overflow-hidden backface-hidden border border-slate-700/60 shadow-[0_16px_40px_rgba(11,21,40,0.35)]">
+<!-- Holographic foil edge & sheen overlay -->
+<div class="absolute inset-0 pointer-events-none hologram-shimmer opacity-30 rounded-3xl z-30 transition-opacity" id="card-glare"></div>
+<!-- Background Micro-Embossed Watermark of Kerala Emblem / Transit Grid -->
+<div class="absolute -right-16 -bottom-16 w-64 h-64 opacity-5 pointer-events-none rounded-full border-[18px] border-white/20"></div>
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(57,184,253,0.12),transparent_40%)] pointer-events-none"></div>
+<!-- Pass Card Header -->
+<div class="relative z-10 flex items-start justify-between">
+<div>
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+<span class="text-[10px] tracking-[0.2em] uppercase font-bold text-emerald-300">KERALA STUDENT CONCESSION</span>
+</div>
+<div class="text-[11px] text-slate-400 tracking-wider uppercase font-medium mt-0.5">HIGHER EDUCATION DEPT // RTO GOVT OF KERALA</div>
+</div>
+<!-- Gold Contactless EMV Chip + NFC Indicator -->
+<div class="flex items-center space-x-2">
+<div class="w-10 h-7 rounded bg-gradient-to-tr from-amber-300 via-yellow-200 to-amber-400 border border-yellow-500/40 flex items-center justify-center p-1 shadow-inner">
+<div class="w-full h-full border border-amber-600/40 rounded-[2px] flex items-center justify-around">
+<div class="w-px h-full bg-amber-700/30"></div>
+<div class="w-px h-full bg-amber-700/30"></div>
+</div>
+</div>
+<span class="material-symbols-outlined text-[24px] text-cyan-400" data-weight="fill">contactless</span>
+</div>
+</div>
+<!-- Student Profile & Identity Block -->
+<div class="relative z-10 flex items-center space-x-4 my-auto py-2">
+<div class="relative w-20 h-24 rounded-2xl overflow-hidden ring-2 ring-emerald-400/40 bg-slate-800 shrink-0 shadow-lg">
+<img class="w-full h-full object-cover" data-alt="Close up portrait photograph of Shreeram Sandesh, a south Asian male engineering student wearing a smart casual collar shirt with a serene expression, studio lit with crisp contrast, clean borders and official identification credentials." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxIOtGgfZ1xzAMTLlUAwHX9CcdtIFuDQY4RTI4qWrBjRHW7uru56nH1vurIQKUsbkhbp-43R4ptwoUlode-NXOPgdADsjJybp_UaGdHLFxWPnmoMH-XpFW0AFvy2WBXFqfUqy5lpAsux4nvmvXgvwmzOmC59WAiMH5jxkxMKC_07AlcPSWEnmfW1V637TgWonkvOAuFsu4p9zIfPSF5aJ5iD2ebYMtCGNnsy5CqNYrvksyIuTg39TU"/>
+<div class="absolute bottom-0 inset-x-0 bg-emerald-950/90 text-emerald-300 text-[8px] font-bold text-center py-0.5 tracking-wider uppercase">VERIFIED</div>
+</div>
+<div class="space-y-1 overflow-hidden">
+<div class="flex items-center space-x-1.5">
+<h2 class="text-headline-sm font-headline-sm font-bold text-white tracking-tight leading-tight truncate">SHREERAM SANDESH</h2>
+<span class="material-symbols-outlined text-[16px] text-cyan-400" data-weight="fill">verified</span>
+</div>
+<p class="text-[11px] font-semibold text-cyan-300 tracking-wide">B.Tech Computer Science</p>
+<p class="text-[10px] text-slate-300 truncate">Christ College of Engineering, Irinjalakuda</p>
+<div class="flex items-center space-x-3 pt-1 text-[9px] text-slate-400 font-mono">
+<span>ROLL: CCE24CS001</span>
+<span>ID: SCP-2026-00124</span>
+</div>
+</div>
+</div>
+<!-- Route Specification & Barcode Ribbon -->
+<div class="relative z-10 bg-slate-900/80 rounded-2xl p-3 border border-slate-800 space-y-2">
+<div class="flex justify-between items-center text-[10px]">
+<span class="text-slate-400 uppercase tracking-wider font-semibold">CONCESSION CORRIDOR</span>
+<span class="text-emerald-400 font-mono font-bold">ZONE 08-KL</span>
+</div>
+<div class="flex items-center justify-between text-xs font-bold text-white">
+<span>THRISSUR CENTRAL</span>
+<span class="material-symbols-outlined text-[14px] text-cyan-400">multiple_stop</span>
+<span>ERNAKULAM SOUTH</span>
+</div>
+<div class="text-[9px] text-slate-400 flex justify-between">
+<span>Via: Aluva, Angamaly, Chalakudy</span>
+<span class="text-cyan-300 font-semibold">Valid: 31 MAR 2027</span>
+</div>
+</div>
+<!-- Front Card Bottom: Status Pill + Scannable Micro QR + Security Hologram -->
+<div class="relative z-10 flex items-center justify-between pt-2 border-t border-slate-800/80">
+<div class="space-y-0.5">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>ACTIVE • 80% KSRTC / 50% METRO</span>
+</div>
+<div class="text-[9px] text-slate-500 pl-1 font-mono tracking-wider">TAP NFC AT TURNSTILE</div>
+</div>
+<div class="flex items-center space-x-2">
+<div class="w-12 h-12 bg-white rounded-lg p-1 flex items-center justify-center shadow-inner">
+<!-- Crisp mini QR simulation -->
+<div class="w-full h-full bg-slate-950 rounded-[4px] p-0.5 grid grid-cols-4 gap-0.5">
+<div class="bg-white rounded-none"></div><div class="bg-white"></div><div class="bg-transparent"></div><div class="bg-white"></div>
+<div class="bg-white"></div><div class="bg-transparent"></div><div class="bg-white"></div><div class="bg-white"></div>
+<div class="bg-transparent"></div><div class="bg-white"></div><div class="bg-white"></div><div class="bg-transparent"></div>
+<div class="bg-white"></div><div class="bg-transparent"></div><div class="bg-white"></div><div class="bg-white"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ================= BACK OF CARD ================= -->
+<div class="absolute inset-0 w-full h-full rounded-3xl bg-[#080e1a] text-white p-6 flex flex-col justify-between overflow-hidden backface-hidden rotate-y-180 border border-slate-700/60 shadow-[0_16px_40px_rgba(11,21,40,0.4)]">
+<!-- Back Card Top Bar -->
+<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<div>
+<h3 class="text-xs font-bold tracking-widest text-slate-300 uppercase">DIGITAL PASS SECURITY REGISTRY</h3>
+<p class="text-[9px] text-slate-500 font-mono mt-0.5">KL-ED-CONCESSION-ACT-2024 // KERALA MVD</p>
+</div>
+<div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400">
+<span class="material-symbols-outlined text-[16px]">shield</span>
+</div>
+</div>
+<!-- Magnetic Stripe Simulation -->
+<div class="w-full h-10 bg-slate-950 rounded-md -mx-6 px-6 flex items-center justify-between border-y border-slate-800">
+<span class="font-mono text-[8px] text-slate-600 tracking-widest">ENCRYPTED TELEMETRY TRANSIT CODE • DO NOT EXPOSE</span>
+<span class="material-symbols-outlined text-[14px] text-slate-600">lock</span>
+</div>
+<!-- Back Dynamic QR Module & Security Hashes -->
+<div class="flex items-center space-x-4 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
+<div class="w-24 h-24 bg-white rounded-xl p-1.5 shrink-0 flex items-center justify-center shadow-lg relative">
+<div class="w-full h-full bg-slate-950 rounded-lg p-1 grid grid-cols-6 gap-0.5">
+<!-- Abstract QR blocks -->
+<div class="bg-white col-span-2 row-span-2 rounded-sm"></div>
+<div class="bg-transparent"></div><div class="bg-white"></div>
+<div class="bg-white col-span-2 row-span-2 rounded-sm"></div>
+<div class="bg-white"></div><div class="bg-transparent"></div>
+<div class="bg-transparent"></div><div class="bg-white"></div><div class="bg-white"></div><div class="bg-transparent"></div>
+<div class="bg-white col-span-2 row-span-2 rounded-sm"></div>
+<div class="bg-white"></div><div class="bg-transparent"></div>
+<div class="bg-white"></div><div class="bg-white"></div>
+</div>
+<div class="absolute inset-x-0 h-0.5 bg-cyan-400 animate-laser"></div>
+</div>
+<div class="text-[10px] space-y-1 font-mono text-slate-300 leading-tight">
+<div class="text-cyan-400 font-bold">PASS ID: SCP-2026-00124</div>
+<div class="text-slate-400">KEY: KL-08-CCE-9941-X9</div>
+<div class="text-slate-400">STATUS: BIOMETRIC ENROLLED</div>
+<div class="text-[9px] text-emerald-400 pt-1">SECURE AUDIT RECORD: PASS</div>
+</div>
+</div>
+<!-- Back Metadata & Issuer Info -->
+<div class="space-y-1.5 text-[9px] text-slate-400 font-sans border-t border-slate-800/80 pt-3">
+<div class="flex justify-between">
+<span>ISSUED BY:</span>
+<span class="text-slate-200 font-medium">Principal, Christ College &amp; RTO Thrissur</span>
+</div>
+<div class="flex justify-between">
+<span>VALID UNTIL:</span>
+<span class="text-slate-200 font-medium">31 MARCH 2027</span>
+</div>
+<div class="flex justify-between text-cyan-300 font-mono">
+<span>EMERGENCY HELPLINE:</span>
+<span>1800-425-KERALA (5372)</span>
+</div>
+</div>
+<div class="text-[8px] text-center text-slate-500 font-mono uppercase tracking-wider">
+                Authorized for State Bus &amp; Metro Transit Subsidies Only • Non-Transferable
+              </div>
+</div>
+</div>
+</div>
+<!-- 3D Card Control & Instructions -->
+<div class="mt-4 flex items-center space-x-2 text-label-caps font-label-caps text-on-surface-variant bg-surface-container-lowest/80 backdrop-blur px-4 py-1.5 rounded-full border border-outline-variant/30 shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-secondary">3d_rotation</span>
+<span>Hover to tilt in 3D • Click card to flip 180° front/back</span>
+</div>
+</div>
+</section>
+<!-- 2. SCROLL & APPLICATION PROGRESSION DASHBOARD -->
+<section class="bg-surface-container-lowest/90 backdrop-blur-sm rounded-3xl border border-outline-variant/30 p-6 md:p-8 shadow-sm space-y-8" id="timeline-section">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/20 pb-4">
+<div>
+<div class="text-label-caps font-label-caps text-secondary uppercase tracking-widest">LIVE PASS STATUS &amp; APPLICATION AUDIT</div>
+<h2 class="text-headline-md font-headline-md text-on-surface">Application Timeline &amp; Concession Lifecycle</h2>
+</div>
+<div class="flex items-center space-x-2">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container text-body-sm font-body-sm text-on-surface border border-outline-variant/30">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container mr-2"></span>
+            Academic Year: 2024–2027
+          </span>
+</div>
+</div>
+<!-- Horizontal Status Progression Tracker -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+<!-- Step 1: Completed -->
+<div class="bg-surface-container-low/60 rounded-2xl p-4 border border-outline-variant/30 relative overflow-hidden">
+<div class="flex items-center justify-between mb-2">
+<span class="w-7 h-7 rounded-full bg-on-tertiary-container text-on-tertiary flex items-center justify-center text-xs font-bold">✓</span>
+<span class="text-label-caps font-label-caps text-on-tertiary-container uppercase">Jan 12, 2024</span>
+</div>
+<h3 class="text-label-lg font-label-lg text-on-surface">Application Submitted</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Student portal enrollment with Kerala Higher Ed e-Services identity.</p>
+</div>
+<!-- Step 2: Completed -->
+<div class="bg-surface-container-low/60 rounded-2xl p-4 border border-outline-variant/30 relative overflow-hidden">
+<div class="flex items-center justify-between mb-2">
+<span class="w-7 h-7 rounded-full bg-on-tertiary-container text-on-tertiary flex items-center justify-center text-xs font-bold">✓</span>
+<span class="text-label-caps font-label-caps text-on-tertiary-container uppercase">Jan 14, 2024</span>
+</div>
+<h3 class="text-label-lg font-label-lg text-on-surface">College Verification</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Principal endorsement, Christ College of Engineering, Irinjalakuda.</p>
+</div>
+<!-- Step 3: Completed -->
+<div class="bg-surface-container-low/60 rounded-2xl p-4 border border-outline-variant/30 relative overflow-hidden">
+<div class="flex items-center justify-between mb-2">
+<span class="w-7 h-7 rounded-full bg-on-tertiary-container text-on-tertiary flex items-center justify-center text-xs font-bold">✓</span>
+<span class="text-label-caps font-label-caps text-on-tertiary-container uppercase">Jan 15, 2024</span>
+</div>
+<h3 class="text-label-lg font-label-lg text-on-surface">RTO Route Approved</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Authorized corridor: Thrissur ⇄ Ernakulam via NH 544.</p>
+</div>
+<!-- Step 4: Active Live State -->
+<div class="bg-primary-container text-on-primary rounded-2xl p-4 border border-secondary/40 relative shadow-md">
+<div class="flex items-center justify-between mb-2">
+<span class="w-7 h-7 rounded-full bg-secondary text-white flex items-center justify-center text-xs font-bold animate-pulse">●</span>
+<span class="text-label-caps font-label-caps text-secondary-fixed uppercase font-bold">LIVE NOW</span>
+</div>
+<h3 class="text-label-lg font-label-lg text-white">Digital Pass Active</h3>
+<p class="text-body-sm font-body-sm text-slate-300 mt-1">NFC cryptographic token loaded on device. Tap-ready at all gates.</p>
+</div>
+</div>
+<!-- Active Route Telemetry Mini-Module -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+<div class="bg-surface-container rounded-2xl p-5 border border-outline-variant/30 flex items-center space-x-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container-lowest text-secondary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[26px]">directions_bus</span>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase">Next Subsidized Bus</div>
+<div class="text-headline-sm font-headline-sm text-on-surface">KSRTC Fast Passenger</div>
+<div class="text-body-sm font-body-sm text-on-tertiary-container font-semibold">Departs 08:15 AM (Bay 3, Thrissur Stand)</div>
+</div>
+</div>
+<div class="bg-surface-container rounded-2xl p-5 border border-outline-variant/30 flex items-center space-x-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container-lowest text-secondary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[26px]">subway</span>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase">Kochi Metro Concession</div>
+<div class="text-headline-sm font-headline-sm text-on-surface">Line 1: Aluva ⇄ Thykoodam</div>
+<div class="text-body-sm font-body-sm text-secondary font-semibold">50% Student Discount Applied</div>
+</div>
+</div>
+<div class="bg-surface-container rounded-2xl p-5 border border-outline-variant/30 flex items-center space-x-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container-lowest text-on-tertiary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[26px]">energy_savings_leaf</span>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-on-surface-variant uppercase">Semester Savings</div>
+<div class="text-headline-sm font-headline-sm text-on-surface">₹4,860 Saved</div>
+<div class="text-body-sm font-body-sm text-on-surface-variant">Avg. 44 trips subsidized this month</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. QUICK ACTIONS GRID -->
+<section class="space-y-6" id="services-section">
+<div class="flex items-center justify-between">
+<div>
+<span class="text-label-caps font-label-caps text-secondary tracking-widest uppercase">STUDENT CONCESSION UTILITIES</span>
+<h2 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-on-background">Quick Actions &amp; Pass Services</h2>
+</div>
+<div class="hidden sm:block text-body-sm font-body-sm text-on-surface-variant">
+          End-to-end digital lifecycle managed with RTO Kerala
+        </div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1: Apply -->
+<div class="bg-surface-container-lowest/90 backdrop-blur-sm rounded-3xl p-6 border border-outline-variant/40 shadow-sm hover:shadow-xl hover:border-secondary/50 transition-all duration-300 group cursor-pointer flex flex-col justify-between h-64">
+<div>
+<div class="w-12 h-12 rounded-2xl bg-surface-container-low text-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">app_registration</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface group-hover:text-secondary transition-colors">Apply For Pass</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">New academic year student onboarding and route allocation request.</p>
+</div>
+<div class="flex items-center space-x-2 text-label-md font-label-md text-secondary font-bold">
+<span>Start Application</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Card 2: View NFC / Wallet -->
+<div class="bg-surface-container-lowest/90 backdrop-blur-sm rounded-3xl p-6 border border-outline-variant/40 shadow-sm hover:shadow-xl hover:border-secondary/50 transition-all duration-300 group cursor-pointer flex flex-col justify-between h-64">
+<div>
+<div class="w-12 h-12 rounded-2xl bg-surface-container-low text-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">contactless</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface group-hover:text-secondary transition-colors">View Pass / NFC</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">Instant Apple / Google Wallet pass provisioning and offline biometric NFC token.</p>
+</div>
+<div class="flex items-center space-x-2 text-label-md font-label-md text-secondary font-bold">
+<span>Add to Wallet</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Card 3: Renew Concession -->
+<div class="bg-surface-container-lowest/90 backdrop-blur-sm rounded-3xl p-6 border border-outline-variant/40 shadow-sm hover:shadow-xl hover:border-secondary/50 transition-all duration-300 group cursor-pointer flex flex-col justify-between h-64">
+<div>
+<div class="w-12 h-12 rounded-2xl bg-surface-container-low text-on-tertiary-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">autorenew</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface group-hover:text-on-tertiary-container transition-colors">Renew Concession</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">Semester re-endorsement with college attendance &amp; fee verification check.</p>
+</div>
+<div class="flex items-center space-x-2 text-label-md font-label-md text-on-tertiary-container font-bold">
+<span>Verify Semester</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Card 4: Verify Pass -->
+<div class="bg-surface-container-lowest/90 backdrop-blur-sm rounded-3xl p-6 border border-outline-variant/40 shadow-sm hover:shadow-xl hover:border-secondary/50 transition-all duration-300 group cursor-pointer flex flex-col justify-between h-64">
+<div>
+<div class="w-12 h-12 rounded-2xl bg-surface-container-low text-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">qr_code_scanner</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface group-hover:text-secondary transition-colors">Verify Pass</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2">Conductor and transit inspector instant cryptographic authenticity check.</p>
+</div>
+<div class="flex items-center space-x-2 text-label-md font-label-md text-secondary font-bold">
+<span>Instant Scanner</span>
+<span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. INTERACTIVE VERIFICATION EXPERIENCE -->
+<section class="bg-surface-container-lowest/90 backdrop-blur-sm rounded-3xl border border-outline-variant/30 p-6 md:p-10 shadow-sm space-y-8" id="verify-section">
+<div class="max-w-2xl">
+<span class="text-label-caps font-label-caps text-secondary uppercase tracking-widest">RTO CONCESSION AUDIT ENGINE</span>
+<h2 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-on-surface mt-1">Verify Student Pass Authenticity</h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2">
+          Simulate a ticket inspector terminal or conductor scan. Verifies public key signature against Kerala Government Higher Education registry.
+        </p>
+</div>
+<!-- Verification Interactive Switcher -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<!-- Left Tab & Input Controls -->
+<div class="lg:col-span-6 space-y-6">
+<div class="inline-flex p-1 bg-surface-container rounded-xl border border-outline-variant/30">
+<button class="px-5 py-2 rounded-lg text-label-md font-label-md font-bold bg-surface-container-lowest text-on-surface shadow-sm transition-all" id="tab-qr">
+              SCAN QR SIMULATOR
+            </button>
+<button class="px-5 py-2 rounded-lg text-label-md font-label-md text-on-surface-variant hover:text-on-surface transition-all" id="tab-id">
+              ENTER PASS ID
+            </button>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-label-md font-label-md text-on-surface mb-1.5">Concession Pass ID / Token Code</label>
+<div class="relative">
+<span class="material-symbols-outlined text-[20px] text-outline absolute left-4 top-1/2 -translate-y-1/2">badge</span>
+<input class="w-full pl-11 pr-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/50 text-body-md font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="verify-input" type="text" value="SCP-2026-00124"/>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="bg-primary-container text-on-primary px-8 h-[50px] rounded-full inline-flex items-center justify-center space-x-2 font-label-lg text-label-lg hover:shadow-lg active:scale-95 transition-all" id="btn-run-verify">
+<span class="material-symbols-outlined text-[18px]">document_scanner</span>
+<span>RUN VERIFICATION</span>
+</button>
+<span class="hidden text-body-sm font-body-sm text-secondary flex items-center space-x-1.5" id="verify-spinner">
+<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+<span>Querying RTO Kerala Node...</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Right Scanner Viewport & Live Certificate Output -->
+<div class="lg:col-span-6">
+<div class="relative bg-slate-950 rounded-3xl p-6 text-white border border-slate-800 overflow-hidden shadow-xl min-h-[260px] flex flex-col justify-between">
+<!-- Laser Scan Line -->
+<div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#39b8fd] opacity-0 pointer-events-none z-20" id="laser-line"></div>
+<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+<span class="text-[11px] font-mono tracking-wider text-slate-300 uppercase">KERALA RTO AUDIT CONSOLE // v4.2</span>
+</div>
+<span class="text-[10px] font-mono text-cyan-400">SSL 256-BIT ENCRYPTED</span>
+</div>
+<!-- Terminal Output / Verified Card Preview -->
+<div class="py-4 space-y-3" id="verify-result-box">
+<div class="flex items-start space-x-3.5">
+<div class="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+</div>
+<div>
+<div class="text-label-caps font-label-caps text-emerald-400 uppercase tracking-wider font-bold">STATE CERTIFICATE VERIFIED</div>
+<h4 class="text-headline-sm font-headline-sm font-bold text-white">Shreeram Sandesh</h4>
+<p class="text-[12px] text-slate-400">Christ College of Engineering, Irinjalakuda</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/80 p-3 rounded-xl border border-slate-800 font-mono">
+<div>
+<span class="text-slate-500 block text-[9px]">APPROVED ROUTE</span>
+<span class="text-slate-200">Thrissur ⇄ Ernakulam</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[9px]">CONCESSION RATE</span>
+<span class="text-emerald-300">80% KSRTC / 50% METRO</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[9px]">VALIDITY WINDOW</span>
+<span class="text-slate-200">Valid until 31 MAR 2027</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[9px]">HASH INTEGRITY</span>
+<span class="text-cyan-400">MATCHED (KL-08-9941)</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-2 border-t border-slate-800">
+<span>DEVICE AUTHENTICATED: TERMINAL-KL-RTO-TCR</span>
+<span class="text-emerald-400">STATUS: 200 OK</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Shared Component: BottomNavBar (Exact Schema Translation) -->
+<nav class="bg-surface-container-lowest/95 dark:bg-primary-container/95 backdrop-blur-lg text-primary dark:text-inverse-primary border border-outline-variant/40 dark:border-outline-variant/20 shadow-lg dark:shadow-2xl floating rounded-full mb-space-md mx-auto max-w-md fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-space-md pb-space-sm pt-space-xs pointer-events-auto md:hidden">
+<!-- Item 1: Pass (ACTIVE Destination for Concession Hero Canvas) -->
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary dark:bg-inverse-surface dark:text-inverse-on-surface rounded-full px-space-md py-space-xs font-semibold active:scale-95 transition-transform duration-150 ease-out" href="#hero-pass">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+<span class="text-label-md font-label-md">Pass</span>
+</a>
+<!-- Item 2: Routes -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-space-md py-space-xs hover:text-primary dark:hover:text-surface-bright transition-colors duration-150 active:scale-95" href="#timeline-section">
+<span class="material-symbols-outlined text-[20px]">alt_route</span>
+<span class="text-label-md font-label-md">Routes</span>
+</a>
+<!-- Item 3: Wallet -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-space-md py-space-xs hover:text-primary dark:hover:text-surface-bright transition-colors duration-150 active:scale-95" href="#services-section">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+<span class="text-label-md font-label-md">Wallet</span>
+</a>
+<!-- Item 4: Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-space-md py-space-xs hover:text-primary dark:hover:text-surface-bright transition-colors duration-150 active:scale-95" href="#hero-pass">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+<span class="text-label-md font-label-md">Profile</span>
+</a>
+</nav>
+<!-- Interactive Logic: 3D Physics Card Tilt, Flip, Dynamic Magnetic Aura & Verification Simulation -->
+<script>
+    (function initConcessionPassApp() {
+      const cardScene = document.getElementById('card-scene');
+      const cardFlipper = document.getElementById('card-flipper');
+      const cardGlare = document.getElementById('card-glare');
+      const cardAura = document.getElementById('card-aura');
+      let isFlipped = false;
+
+      // 1. 3D Card Tilt with Glare Reflection & Magnetic Aura Glow
+      if (cardScene && cardFlipper) {
+        cardScene.addEventListener('mousemove', (e) => {
+          const rect = cardScene.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const rotateX = ((y - centerY) / centerY) * -14;
+          const rotateY = ((x - centerX) / centerX) * 14;
+
+          const baseRotation = isFlipped ? 180 : 0;
+          cardFlipper.style.transform = `rotateX(${rotateX}deg) rotateY(${baseRotation + rotateY}deg)`;
+
+          if (cardGlare) {
+            const glareX = (x / rect.width) * 100;
+            const glareY = (y / rect.height) * 100;
+            cardGlare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.4) 0%, rgba(57,184,253,0.3) 35%, transparent 70%)`;
+            cardGlare.style.opacity = '0.5';
+          }
+
+          if (cardAura) {
+            const auraX = ((x - centerX) / centerX) * 20;
+            const auraY = ((y - centerY) / centerY) * 20;
+            cardAura.style.transform = `translate(${auraX}px, ${auraY}px) scale(1.08)`;
+            cardAura.style.opacity = '0.85';
+          }
+        });
+
+        cardScene.addEventListener('mouseleave', () => {
+          const baseRotation = isFlipped ? 180 : 0;
+          cardFlipper.style.transform = `rotateX(0deg) rotateY(${baseRotation}deg)`;
+          if (cardGlare) cardGlare.style.opacity = '0.2';
+          if (cardAura) {
+            cardAura.style.transform = 'translate(0px, 0px) scale(1)';
+            cardAura.style.opacity = '0.6';
+          }
+        });
+
+        // Click to execute smooth 180 flip
+        cardScene.addEventListener('click', () => {
+          isFlipped = !isFlipped;
+          const baseRotation = isFlipped ? 180 : 0;
+          cardFlipper.style.transform = `rotateX(0deg) rotateY(${baseRotation}deg)`;
+        });
+      }
+
+      // 2. Verification Simulator Micro-Interactions
+      const btnVerify = document.getElementById('btn-run-verify');
+      const laserLine = document.getElementById('laser-line');
+      const verifySpinner = document.getElementById('verify-spinner');
+      const resultBox = document.getElementById('verify-result-box');
+
+      if (btnVerify && laserLine) {
+        btnVerify.addEventListener('click', () => {
+          // Trigger laser line & pulse
+          laserLine.style.opacity = '1';
+          laserLine.classList.add('animate-laser');
+          if (verifySpinner) verifySpinner.classList.remove('hidden');
+          if (resultBox) resultBox.style.opacity = '0.4';
+
+          setTimeout(() => {
+            laserLine.style.opacity = '0';
+            laserLine.classList.remove('animate-laser');
+            if (verifySpinner) verifySpinner.classList.add('hidden');
+            if (resultBox) {
+              resultBox.style.opacity = '1';
+              resultBox.classList.add('transition-all');
+            }
+          }, 1400);
+        });
+      }
+
+      // Tabs switcher styling
+      const tabQr = document.getElementById('tab-qr');
+      const tabId = document.getElementById('tab-id');
+      const verifyInput = document.getElementById('verify-input');
+
+      if (tabQr && tabId && verifyInput) {
+        tabQr.addEventListener('click', () => {
+          tabQr.className = 'px-5 py-2 rounded-lg text-label-md font-label-md font-bold bg-surface-container-lowest text-on-surface shadow-sm transition-all';
+          tabId.className = 'px-5 py-2 rounded-lg text-label-md font-label-md text-on-surface-variant hover:text-on-surface transition-all';
+          verifyInput.value = 'SCP-2026-00124';
+        });
+
+        tabId.addEventListener('click', () => {
+          tabId.className = 'px-5 py-2 rounded-lg text-label-md font-label-md font-bold bg-surface-container-lowest text-on-surface shadow-sm transition-all';
+          tabQr.className = 'px-5 py-2 rounded-lg text-label-md font-label-md text-on-surface-variant hover:text-on-surface transition-all';
+          verifyInput.value = 'KL-08-CCE-9941';
+          verifyInput.focus();
+        });
+      }
+    })();
+  </script>
+</body></html>
