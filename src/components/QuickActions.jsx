@@ -4,7 +4,7 @@ import React from 'react';
  * QuickActions component:
  * - 4 interactive service cards adapted for Light and Dark themes
  *   1. Apply For Pass (opens multi-step form)
- *   2. View Pass / NFC (switches view to 3D Pass / Apple Wallet simulation)
+ *   2. View Digital Pass (switches view to 3D Pass / Digital Credential)
  *   3. Renew Concession (opens semester re-endorsement check)
  *   4. Verify Pass (scrolls to/activates verification console)
  */
@@ -21,9 +21,9 @@ export default function QuickActions({ onOpenApply, onGoPass, onGoVerify, onOpen
     },
     {
       id: 'wallet',
-      icon: 'contactless',
-      title: 'View Pass / NFC',
-      description: 'Instant Apple / Google Wallet pass provisioning and offline biometric NFC token.',
+      icon: 'credit_card',
+      title: 'View Digital Pass',
+      description: 'Instant digital student pass credential, cryptographic QR identity, and transit token.',
       cta: 'View 3D Pass',
       onClick: onGoPass,
       color: 'text-sky-600 dark:text-sky-400',

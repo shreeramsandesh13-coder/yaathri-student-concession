@@ -594,7 +594,7 @@ def generate_travel_token(
     return schemas.TravelTokenResponse(
         token_code=token.token_code,
         pass_number=pass_obj.pass_number,
-        turnstile_gate=token.turnstile_gate,
+        turnstile_gate=token.turnstile_gate or "GATE-04-ALUVA",
         valid_until=token.valid_until,
         remaining_seconds=90
     )

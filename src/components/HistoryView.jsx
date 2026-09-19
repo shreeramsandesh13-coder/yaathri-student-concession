@@ -41,7 +41,7 @@ export default function HistoryView({ studentData }) {
       discount: '80%',
       paidFare: '₹7.00',
       saved: '₹28.00',
-      status: 'NFC GATE TAP',
+      status: 'QR VERIFIED',
     },
     {
       id: 'TRIP-9722',
@@ -68,7 +68,7 @@ export default function HistoryView({ studentData }) {
             Trip &amp; Subsidy History
           </h2>
           <p className="text-body-md font-body-md text-slate-500 dark:text-slate-400 mt-1">
-            ONE PASS • A BRIGHTER JOURNEY • Real-time tap records registered on NFC turnstiles and conductor handheld terminals.
+            ONE PASS • A BRIGHTER JOURNEY • Real-time scan records registered on automated QR gates and conductor handheld terminals.
           </p>
         </div>
 

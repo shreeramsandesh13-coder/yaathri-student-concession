@@ -51,7 +51,7 @@ export default function Footer({ onOpenApply, onGoVerify, onGoPass }) {
                   onClick={onGoPass}
                   className="hover:text-slate-900 dark:hover:text-white transition-colors text-left"
                 >
-                  View 3D NFC Card
+                  View 3D Digital Card
                 </button>
               </li>
               <li>

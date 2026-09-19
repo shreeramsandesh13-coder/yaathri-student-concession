@@ -19,7 +19,7 @@ import { initialStudentData, initialTimeline } from './data/student';
 import { api } from './services/api';
 
 function MainApp() {
-  const { user, student, isAdmin } = useAuth();
+  const { user, student, isAdmin, isAuthenticated } = useAuth();
   const [showSplash, setShowSplash] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -28,25 +28,44 @@ function MainApp() {
       return false;
     }
   });
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'admin' : 'dashboard');
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [studentData, setStudentData] = useState(initialStudentData);
+  const [studentData, setStudentData] = useState(() => (isAdmin ? null : initialStudentData));
   const [timeline, setTimeline] = useState(initialTimeline);
 
-  // Sync with live backend student profile and application status when authenticated
+  // Strict role routing & isolation
+  useEffect(() => {
+    if (isAdmin) {
+      // Admin should never see student dashboard or student concession card
+      setStudentData(null);
+      if (activeTab !== 'admin' && activeTab !== 'verify') {
+        setActiveTab('admin');
+      }
+    } else {
+      // Student or guest should never see admin view
+      if (activeTab === 'admin') {
+        setActiveTab('dashboard');
+      }
+      if (!isAuthenticated) {
+        setStudentData(initialStudentData);
+        setTimeline(initialTimeline);
+      }
+    }
+  }, [isAdmin, activeTab, isAuthenticated]);
+
+  // Sync with live backend student profile and application status when student is authenticated
   useEffect(() => {
     async function syncStudentData() {
-      if (!student) return;
+      if (!student || isAdmin) return;
 
-      const baseName = student.full_name || `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student';
-      let currentStatus = 'ACTIVE';
-      let passNum = 'SCP-2026-00124';
-      let validDate = '31 MAR 2027';
+      const baseName = student.full_name || 'Student';
+      let currentStatus = 'NOT_APPLIED';
+      let passNum = null;
+      let validDate = null;
       let rejectionReason = null;
-      let appNumber = 'APP-2026-00124';
-
+      let appNumber = null;
       let activePassObj = null;
       let instQr = student.institutional_qr_code || null;
 
@@ -79,36 +98,45 @@ function MainApp() {
           activePassObj = passRes.value;
           passNum = activePassObj.pass_number || passNum;
           validDate = activePassObj.valid_until || activePassObj.expiry_date || validDate;
+          if (currentStatus === 'NOT_APPLIED') {
+            currentStatus = activePassObj.status || 'ACTIVE';
+          }
         }
       } catch (e) {
         console.warn('Could not fetch active pass or institutional qr:', e);
       }
 
-      setStudentData((prev) => ({
-        ...prev,
+      setStudentData({
         id: student.id,
         name: baseName,
-        rollNo: student.roll_number || prev.rollNo,
-        studentIdNumber: student.student_id_number || prev.studentIdNumber || 'STU-2024-8841',
-        college: student.institution_name || student.college_address || student.institution?.name || prev.college,
-        course: student.course || prev.course,
-        year: student.semester || student.year_semester || prev.year,
-        bloodGroup: student.blood_group || prev.bloodGroup,
-        photoUrl: student.photo_url || prev.photoUrl,
-        passId: activePassObj?.id || prev.passId || 1,
-        passNumber: passNum,
-        validUntil: validDate,
+        rollNo: student.roll_number || 'CCE24CS001',
+        studentIdNumber: student.student_id_number || 'STU-2024-8841',
+        college: student.institution_name || student.college_address || 'Christ College of Engineering, Irinjalakuda',
+        course: student.course || 'B.Tech Computer Science',
+        year: student.semester || student.year_semester || '3rd Year (Semester 5)',
+        bloodGroup: student.blood_group || 'O +ve',
+        photoUrl: student.photo_url || initialStudentData.photoUrl,
+        passId: activePassObj?.id || 1,
+        passNumber: passNum || (currentStatus === 'ACTIVE' ? 'SCP-2026-00124' : 'PENDING APPROVAL'),
+        validUntil: validDate || (currentStatus === 'ACTIVE' ? '31 / 03 / 2027' : 'Pending'),
         status: currentStatus,
         applicationId: appNumber,
         rejectionReason: rejectionReason,
-        institutionalQrCode: instQr || prev.institutionalQrCode || 'YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012',
-        routeCorridor: activePassObj?.route_name || activePassObj?.route?.corridor || prev.routeCorridor,
-        origin: activePassObj?.starting_point || activePassObj?.route?.from_location || prev.origin,
-        destination: activePassObj?.destination || activePassObj?.route?.to_location || prev.destination,
-        transportMode: activePassObj?.transport_type || prev.transportMode || 'Bus & Metro',
-        subsidyRate: activePassObj?.subsidy_rate || prev.subsidyRate || '80% KSRTC / 50% METRO',
-        issueDate: activePassObj?.valid_from || activePassObj?.issue_date || prev.issueDate,
-      }));
+        institutionalQrCode: instQr || 'YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012',
+        routeCorridor: activePassObj?.route_name || activePassObj?.route?.corridor || 'Thrissur ⇄ Ernakulam (Via Aluva, Angamaly, Chalakudy)',
+        origin: activePassObj?.starting_point || activePassObj?.route?.from_location || 'Thrissur Central',
+        destination: activePassObj?.destination || activePassObj?.route?.to_location || 'Ernakulam South',
+        transportMode: activePassObj?.transport_type || 'Bus & Metro',
+        subsidyRate: activePassObj?.subsidy_rate || '80% KSRTC / 50% METRO',
+        issueDate: activePassObj?.valid_from || activePassObj?.issue_date || '01 / 06 / 2024',
+        email: user?.email || '',
+        phone: student.phone || '+91 98470 12345',
+        age: student.age || '21',
+        dob: student.dob || '14 / 08 / 2003',
+        emergencyPhone: student.emergency_phone || '+91 94471 98765',
+        studentAddress: student.student_address || 'Thrissur, Kerala',
+        collegeAddress: student.college_address || 'Christ College of Engineering, Irinjalakuda, Thrissur – 680125',
+      });
 
       // Dynamically sync timeline based on real application status
       if (currentStatus === 'PENDING') {
@@ -117,7 +145,7 @@ function MainApp() {
             step: 1,
             title: "Application Submitted",
             date: "RECENTLY",
-            description: `Application ${appNumber} received by RTO Kerala node.`,
+            description: `Application ${appNumber || ''} received by RTO Kerala node.`,
             completed: true,
             active: false
           },
@@ -141,7 +169,7 @@ function MainApp() {
             step: 4,
             title: "Digital Pass Issuance",
             date: "PENDING",
-            description: "NFC digital credential generation.",
+            description: "Secure QR digital credential generation.",
             completed: false,
             active: false
           }
@@ -152,7 +180,7 @@ function MainApp() {
             step: 1,
             title: "Application Submitted",
             date: "RECENTLY",
-            description: `Application ${appNumber} was submitted.`,
+            description: `Application ${appNumber || ''} was submitted.`,
             completed: true,
             active: false
           },
@@ -188,7 +216,7 @@ function MainApp() {
     }
 
     syncStudentData();
-  }, [student]);
+  }, [student, isAdmin, user]);
 
   const handleSplashComplete = () => {
     try {
@@ -219,29 +247,29 @@ function MainApp() {
   };
 
   const handleApplicationSubmitted = (newFormData) => {
-    console.log('Application registered for:', newFormData.fullName);
     setStudentData((prev) => ({
-      ...prev,
-      photoUrl: newFormData.photoUrl || prev.photoUrl,
-      name: newFormData.fullName || prev.name,
-      rollNo: newFormData.rollNumber || prev.rollNo,
-      college: newFormData.college || prev.college,
-      course: newFormData.course || prev.course,
-      age: newFormData.age || prev.age,
-      dob: newFormData.dob || prev.dob,
-      bloodGroup: newFormData.bloodGroup || prev.bloodGroup,
-      studentAddress: newFormData.studentAddress || prev.studentAddress,
-      collegeAddress: newFormData.collegeAddress || prev.collegeAddress,
-      emergencyPhone: newFormData.emergencyPhone || prev.emergencyPhone,
-      from: newFormData.startingPoint || prev.from,
-      to: newFormData.destination || prev.to,
-      route: newFormData.route || prev.route,
+      ...(prev || {}),
+      photoUrl: newFormData.photoUrl || prev?.photoUrl,
+      name: newFormData.fullName || prev?.name,
+      rollNo: newFormData.rollNumber || prev?.rollNo,
+      college: newFormData.college || prev?.college,
+      course: newFormData.course || prev?.course,
+      age: newFormData.age || prev?.age,
+      dob: newFormData.dob || prev?.dob,
+      bloodGroup: newFormData.bloodGroup || prev?.bloodGroup,
+      studentAddress: newFormData.studentAddress || prev?.studentAddress,
+      collegeAddress: newFormData.collegeAddress || prev?.collegeAddress,
+      emergencyPhone: newFormData.emergencyPhone || prev?.emergencyPhone,
+      from: newFormData.startingPoint || prev?.from,
+      to: newFormData.destination || prev?.to,
+      route: newFormData.route || prev?.route,
+      status: 'PENDING',
     }));
   };
 
   const handleRenewSuccess = () => {
     setStudentData((prev) => ({
-      ...prev,
+      ...(prev || {}),
       validUntil: '31 MAR 2027',
       status: 'ACTIVE',
     }));
@@ -268,65 +296,55 @@ function MainApp() {
 
         {/* Main Canvas Content */}
         <main className="pt-20 sm:pt-24 pb-28 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto space-y-16 lg:space-y-24 flex-1 w-full">
-          {activeTab === 'dashboard' && (
-            <>
-              <Hero
-                onOpenApply={handleOpenApply}
-                onGoVerify={handleGoVerify}
-                studentData={studentData}
-              />
-              <ApplicationTimeline timeline={timeline} studentData={studentData} />
-              <QuickActions
-                onOpenApply={handleOpenApply}
-                onGoPass={handleGoPass}
-                onGoVerify={handleGoVerify}
-                onOpenRenew={() => setIsRenewOpen(true)}
-              />
-              <VerifyPass />
-            </>
-          )}
-
-          {activeTab === 'pass' && (
-            <>
-              <PassView studentData={studentData} />
-              <ApplicationTimeline timeline={timeline} studentData={studentData} />
-            </>
-          )}
-
-          {activeTab === 'verify' && (
-            <div className="pt-6">
-              <VerifyPass />
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <HistoryView studentData={studentData} />
-          )}
-
-          {activeTab === 'admin' && (
-            <div className="pt-6">
-              {isAdmin ? (
+          {/* STRICT ROLE SEPARATION: ADMIN VIEW */}
+          {isAdmin ? (
+            activeTab === 'verify' ? (
+              <div className="pt-6">
+                <VerifyPass />
+              </div>
+            ) : (
+              <div className="pt-6">
                 <AdminView />
-              ) : (
-                <div className="bg-white/80 dark:bg-[#0D1118]/90 backdrop-blur-md rounded-3xl p-8 md:p-12 border border-slate-200 dark:border-slate-800 text-center space-y-4 max-w-xl mx-auto shadow-sm">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-2xl font-bold">
-                    🛡️
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                    Officer &amp; RTO Desk Authorization Required
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    This administration console requires institutional clerk or Kerala Motor Vehicles Department (RTO) credentials.
-                  </p>
-                  <button
-                    onClick={() => setIsAuthOpen(true)}
-                    className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 font-bold text-sm shadow hover:opacity-90 cursor-pointer"
-                  >
-                    Sign In as Officer / RTO Admin
-                  </button>
+              </div>
+            )
+          ) : (
+            /* STUDENT / VISITOR VIEW */
+            <>
+              {activeTab === 'dashboard' && (
+                <>
+                  <Hero
+                    onOpenApply={handleOpenApply}
+                    onGoVerify={handleGoVerify}
+                    studentData={studentData || initialStudentData}
+                  />
+                  <ApplicationTimeline timeline={timeline} studentData={studentData || initialStudentData} />
+                  <QuickActions
+                    onOpenApply={handleOpenApply}
+                    onGoPass={handleGoPass}
+                    onGoVerify={handleGoVerify}
+                    onOpenRenew={() => setIsRenewOpen(true)}
+                  />
+                  <VerifyPass />
+                </>
+              )}
+
+              {activeTab === 'pass' && (
+                <>
+                  <PassView studentData={studentData || initialStudentData} />
+                  <ApplicationTimeline timeline={timeline} studentData={studentData || initialStudentData} />
+                </>
+              )}
+
+              {activeTab === 'verify' && (
+                <div className="pt-6">
+                  <VerifyPass />
                 </div>
               )}
-            </div>
+
+              {activeTab === 'history' && (
+                <HistoryView studentData={studentData || initialStudentData} />
+              )}
+            </>
           )}
         </main>
 
@@ -347,7 +365,7 @@ function MainApp() {
         <RenewModal
           isOpen={isRenewOpen}
           onClose={() => setIsRenewOpen(false)}
-          studentData={studentData}
+          studentData={studentData || initialStudentData}
           onRenewSuccess={handleRenewSuccess}
         />
 

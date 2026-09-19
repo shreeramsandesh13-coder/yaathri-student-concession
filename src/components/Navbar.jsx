@@ -5,24 +5,30 @@ import { useAuth } from '../context/AuthContext';
 
 /**
  * Navbar component:
- * - Desktop top navigation bar with official YAATHRI branding, active NFC status badge, quick nav tabs, ThemeToggle, and avatar
+ * - Desktop top navigation bar with official YAATHRI branding, active QR verified status badge, quick nav tabs, ThemeToggle, and avatar
  * - Mobile bottom floating pill navigation bar with active indicators and quick ThemeToggle
  * - Dynamic Admin Desk tab and RBAC identity switcher
  */
 export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAuth, studentData }) {
   const { user, isAdmin, isAuthenticated, logout } = useAuth();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { id: 'pass', label: 'My Pass', icon: 'credit_card' },
-    { id: 'apply', label: 'Apply', icon: 'app_registration', action: onOpenApply },
-    { id: 'verify', label: 'Verify', icon: 'verified' },
-    { id: 'history', label: 'History', icon: 'history' },
-  ];
+  const navItems = isAdmin
+    ? [
+        { id: 'admin', label: 'Admin Dashboard', icon: 'admin_panel_settings' },
+        { id: 'verify', label: 'QR Scanner', icon: 'qr_code_scanner' },
+      ]
+    : [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+        { id: 'pass', label: 'My Pass', icon: 'credit_card' },
+        { id: 'apply', label: 'Apply', icon: 'app_registration', action: onOpenApply },
+        { id: 'verify', label: 'Verify', icon: 'verified' },
+        { id: 'history', label: 'History', icon: 'history' },
+      ];
 
-  if (isAdmin) {
-    navItems.push({ id: 'admin', label: 'Admin Desk', icon: 'admin_panel_settings' });
-  }
+  const handleLogout = async () => {
+    await logout();
+    setActiveTab('dashboard');
+  };
 
   return (
     <>
@@ -31,7 +37,7 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Official YAATHRI Logo & Identity */}
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => setActiveTab(isAdmin ? 'admin' : 'dashboard')}
             className="flex items-center space-x-3 text-left group cursor-pointer focus:outline-none"
           >
             <YaathriLogo variant="full" />
@@ -64,13 +70,13 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
             })}
           </nav>
 
-          {/* Trailing Actions: RBAC Status, NFC Badge, ThemeToggle, Auth */}
+          {/* Trailing Actions: RBAC Status, QR Badge, ThemeToggle, Auth */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* NFC Beacon Status Indicator */}
+            {/* QR Verification Status Indicator */}
             <div className="hidden lg:flex items-center space-x-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-900/90 rounded-full border border-slate-200 dark:border-slate-800">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-label-caps font-label-caps text-emerald-700 dark:text-emerald-400 tracking-wider">
-                ACTIVE NFC
+                QR VERIFIED
               </span>
             </div>
 
@@ -90,7 +96,7 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
                   </div>
                   <div className="hidden sm:flex flex-col pr-1">
                     <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[100px]">
-                      {isAdmin ? 'Kerala RTO Desk' : studentData.name || user?.email?.split('@')[0]}
+                      {isAdmin ? 'Kerala RTO Desk' : studentData?.name || user?.email?.split('@')[0]}
                     </span>
                     <span
                       className={`text-[9px] font-bold tracking-wider uppercase font-mono ${
@@ -102,8 +108,8 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
                   </div>
                 </button>
                 <button
-                  onClick={logout}
-                  className="p-1 rounded-full text-slate-400 hover:text-red-500 transition-colors"
+                  onClick={handleLogout}
+                  className="p-1 rounded-full text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
                   title="Sign Out"
                 >
                   <span className="material-symbols-outlined text-[16px]">logout</span>

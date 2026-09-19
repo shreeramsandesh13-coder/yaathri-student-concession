@@ -18,5 +18,5 @@ def get_student_profile(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Student profile not found for this account."
         )
-    return schemas.StudentOut.from_orm(student)
+    return schemas.StudentOut.model_validate(student)
 

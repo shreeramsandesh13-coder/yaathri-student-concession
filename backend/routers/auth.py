@@ -57,32 +57,32 @@ def register(req: schemas.UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    token = create_access_token(user.id, user.email, user.role)
+    token = create_access_token(int(user.id), str(user.email), str(user.role))
     return schemas.TokenResponse(
         access_token=token,
         token_type="bearer",
-        user=schemas.UserOut.from_orm(user)
+        user=schemas.UserOut.model_validate(user)
     )
 
 @router.post("/login", response_model=schemas.TokenResponse)
 def login(req: schemas.UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email.lower()).first()
-    if not user or not verify_password(req.password, user.hashed_password):
+    if not user or not verify_password(req.password, str(user.hashed_password)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password. Please verify your credentials."
         )
-    if not user.is_active:
+    if not bool(user.is_active):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is suspended or inactive."
         )
 
-    token = create_access_token(user.id, user.email, user.role)
+    token = create_access_token(int(user.id), str(user.email), str(user.role))
     return schemas.TokenResponse(
         access_token=token,
         token_type="bearer",
-        user=schemas.UserOut.from_orm(user)
+        user=schemas.UserOut.model_validate(user)
     )
 
 @router.post("/logout")
@@ -93,10 +93,10 @@ def logout(current_user: models.User = Depends(get_current_user)):
 @router.get("/me", response_model=schemas.UserMeResponse)
 def get_me(current_user: models.User = Depends(get_current_user)):
     student_data = None
-    if current_user.student_profile:
-        student_data = schemas.StudentOut.from_orm(current_user.student_profile)
+    if current_user.student_profile is not None:
+        student_data = schemas.StudentOut.model_validate(current_user.student_profile)
     return schemas.UserMeResponse(
-        user=schemas.UserOut.from_orm(current_user),
+        user=schemas.UserOut.model_validate(current_user),
         student=student_data
     )
 

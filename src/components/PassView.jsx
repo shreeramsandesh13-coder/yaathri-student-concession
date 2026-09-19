@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ConcessionPass from './ConcessionPass';
+import RouteMap from './RouteMap';
 import { api } from '../services/api';
 
 /**
@@ -7,12 +8,13 @@ import { api } from '../services/api';
  * - Dedicated cinematic view of the 3D Concession Pass
  * - Displays Permanent Institutional QR (opaque identifier YAATHRI-ID:...)
  * - Live Single-Use Travel Token (TT-...) generator with 90s countdown timer
- * - NFC Turnstile Tap simulation wired to real backend verification
+ * - QR Scan simulation wired to real backend verification
+ * - Approved transit route interactive OpenStreetMap corridor
  * - Print / Download Pass functionality with dedicated print-media styling
  * - Fully adapted for Light and Dark themes
  */
 export default function PassView({ studentData }) {
-  const [nfcTapped, setNfcTapped] = useState(false);
+  const [qrScanned, setQrScanned] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   
   // Single-use travel token state
@@ -59,23 +61,23 @@ export default function PassView({ studentData }) {
     }
   };
 
-  const handleSimulateNfc = async () => {
-    setNfcTapped(true);
+  const handleSimulateQrScan = async () => {
+    setQrScanned(true);
     try {
       const passId = studentData.passId || 1;
-      const tokenRes = await api.tokens.generate(passId, 'GATE-04-ALUVA');
+      const tokenRes = await api.tokens.generate(passId, 'QR-CHECKPOST-ALUVA');
       if (tokenRes && tokenRes.token_code) {
-        const verifyRes = await api.tokens.verify(tokenRes.token_code, 'GATE-04-ALUVA');
-        showToast(`📡 Live NFC Gate: ${verifyRes.message || 'Turnstile Gate #04 Opened (0.3s)'}`);
+        const verifyRes = await api.tokens.verify(tokenRes.token_code, 'QR-CHECKPOST-ALUVA');
+        showToast(`📷 Live QR Checkpost: ${verifyRes.message || 'Checkpost Gate #04 Verified (0.3s)'}`);
       } else {
-        showToast('📡 NFC Beacon Emitted: Turnstile Gate #04 Opened (0.3s)');
+        showToast('📷 QR Scanned: Checkpost Gate #04 Verified (0.3s)');
       }
     } catch (err) {
-      console.warn('Backend NFC simulation fallback:', err);
-      showToast('📡 NFC Beacon Emitted: Turnstile Gate #04 Opened (0.3s)');
+      console.warn('Backend QR simulation fallback:', err);
+      showToast('📷 QR Scanned: Checkpost Gate #04 Verified (0.3s)');
     } finally {
       setTimeout(() => {
-        setNfcTapped(false);
+        setQrScanned(false);
       }, 2500);
     }
   };
@@ -128,15 +130,15 @@ export default function PassView({ studentData }) {
           </button>
 
           <button
-            onClick={handleSimulateNfc}
+            onClick={handleSimulateQrScan}
             className={`px-4 py-2.5 rounded-full font-label-lg text-label-lg flex items-center space-x-2 transition-all shadow-md active:scale-95 font-semibold cursor-pointer ${
-              nfcTapped
+              qrScanned
                 ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 dark:ring-emerald-900'
                 : 'bg-sky-600 text-white hover:bg-sky-500 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">contactless</span>
-            <span>{nfcTapped ? 'NFC VALIDATED (0.3s)' : 'TEST NFC GATE TAP'}</span>
+            <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+            <span>{qrScanned ? 'QR VERIFIED (0.3s)' : 'TEST QR SCAN ACCESS'}</span>
           </button>
 
           <button
@@ -406,6 +408,29 @@ export default function PassView({ studentData }) {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Approved Transit Corridor Interactive Map */}
+      <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div>
+            <span className="text-label-caps font-label-caps text-sky-600 dark:text-sky-400 uppercase tracking-widest font-semibold text-xs">
+              APPROVED COMMUTE CORRIDOR
+            </span>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-sky-500 text-[20px]">map</span>
+              <span>Transit Corridor Route &amp; Stop Geofence</span>
+            </h3>
+          </div>
+          <span className="text-xs font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+            {studentData.from || 'Thrissur'} ⇄ {studentData.to || 'Ernakulam'}
+          </span>
+        </div>
+        <RouteMap
+          startPoint={studentData.from || studentData.origin || 'Thrissur Central'}
+          endPoint={studentData.to || studentData.destination || 'Ernakulam South'}
+          height="280px"
+        />
       </div>
     </section>
   );

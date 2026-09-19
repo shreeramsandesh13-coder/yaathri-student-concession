@@ -34,6 +34,30 @@ def test_auth_login():
     assert res.status_code == 403
     print("[PASS] Role protection passed (403 for student on admin route)")
 
+    # 2b. Invalid student login (wrong password)
+    res = client.post("/api/auth/login", json={
+        "email": "shreeram.sandesh@cce.edu.in",
+        "password": "WrongPassword!999"
+    })
+    assert res.status_code == 401
+    print("[PASS] Invalid student login correctly rejected (401 Unauthorized)")
+
+    # 2c. Forgot password test
+    res = client.post("/api/auth/forgot-password", json={
+        "email": "shreeram.sandesh@cce.edu.in"
+    })
+    assert res.status_code == 200
+    assert res.json()["status"] == "SENT"
+    print("[PASS] Forgot password request passed")
+
+    # 2d. Ensure password hashes are never exposed in user payloads
+    res = client.get("/api/auth/me", headers={"Authorization": f"Bearer {student_token}"})
+    assert res.status_code == 200
+    user_me = res.json()
+    assert "hashed_password" not in user_me["user"]
+    assert "password" not in user_me["user"]
+    print("[PASS] Security check: password hashes are not exposed")
+
     # 3. Admin login
     res = client.post("/api/auth/login", json={
         "email": "admin@yaathri.kerala.gov.in",
@@ -44,6 +68,15 @@ def test_auth_login():
     assert admin_data["user"]["role"] == "ADMIN"
     admin_token = admin_data["access_token"]
     print("[PASS] Admin login passed")
+
+    # 3b. Admin cannot create student concession application (no student profile)
+    res = client.post("/api/applications", json={
+        "route_id": 1,
+        "academic_year": "2024–2027",
+        "transport_mode": "Bus"
+    }, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 400
+    print("[PASS] Admin role separation: admin cannot apply for student concession pass")
 
     # 4. Admin accessing admin route
     res = client.get("/api/admin/applications", headers={
@@ -89,6 +122,18 @@ def test_auth_login():
     print("[PASS] Travel Token turnstile verification passed")
 
     # 8. Student registration
+    # 8. Password validation test: password < 6 chars should be rejected
+    res = client.post("/api/auth/register", json={
+        "email": f"short.pass.{os.getpid()}@cce.edu.in",
+        "password": "123",
+        "full_name": "Short Pass User",
+        "roll_number": f"SHORT{os.getpid()}",
+        "phone": "+91 99999 77777"
+    })
+    assert res.status_code == 422
+    print("[PASS] Password validation check passed (< 6 characters rejected with 422)")
+
+    # 8b. Student registration with valid credentials
     new_email = f"test.student.{os.getpid()}@cce.edu.in"
     res = client.post("/api/auth/register", json={
         "email": new_email,
@@ -98,8 +143,16 @@ def test_auth_login():
         "phone": "+91 99999 88888"
     })
     assert res.status_code == 200
+    new_student_token = res.json()["access_token"]
     assert "access_token" in res.json()
     print("[PASS] Student registration passed")
+
+    # 8c. Student data isolation: new student sees only their own data (0 applications, not Shreeram's)
+    res = client.get("/api/applications", headers={"Authorization": f"Bearer {new_student_token}"})
+    assert res.status_code == 200
+    isolated_apps = res.json()
+    assert len(isolated_apps) == 0
+    print("[PASS] Student data isolation passed: newly registered student does not see other students' applications")
 
     # 9. Admin Real-Time Database Statistics
     res = client.get("/api/admin/stats", headers={"Authorization": f"Bearer {admin_token}"})

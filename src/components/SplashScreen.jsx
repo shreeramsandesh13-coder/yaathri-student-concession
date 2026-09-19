@@ -2,18 +2,33 @@ import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * YAATHRI Official Startup Animation:
- * - Uses the official MP4 intro video (/yaathri-intro.mp4)
+ * - Automatically selects correct video based on viewport/device:
+ *   - Desktop: /introdesktop.mp4
+ *   - Mobile/Phone: /introphone.mp4
+ * - Full-screen intro with preserved aspect ratio (no stretch)
  * - Plays exactly once on application initial entry
- * - No browser video controls, non-looping
- * - Responsive on desktop, tablet, and mobile with preserved aspect ratio (no stretch)
- * - Smooth fade out transition to the YAATHRI landing page upon completion or skip
- * - Clean Skip button with identical smooth fade
+ * - No browser video controls, non-looping, muted autoplay for guaranteed browser compatibility
+ * - Smooth fade-out transition to the YAATHRI landing page upon completion or skip
+ * - Visible, clean Skip button
  * - Respects prefers-reduced-motion
  */
 export default function SplashScreen({ onComplete }) {
   const [isFading, setIsFading] = useState(false);
   const videoRef = useRef(null);
   const fadeDuration = 700; // 700ms smooth fade transition
+
+  // Automatically determine desktop vs mobile video source
+  const getInitialVideoSrc = () => {
+    if (typeof window === 'undefined') return '/introdesktop.mp4';
+    const isMobileViewport = window.innerWidth < 768;
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isPortrait = window.innerHeight > window.innerWidth;
+    return (isMobileViewport || (isTouchDevice && isPortrait))
+      ? '/introphone.mp4'
+      : '/introdesktop.mp4';
+  };
+
+  const [videoSrc, setVideoSrc] = useState(getInitialVideoSrc);
 
   const handleTransitionOut = () => {
     if (isFading) return;
@@ -38,6 +53,19 @@ export default function SplashScreen({ onComplete }) {
       }
     }
 
+    // Auto-detect orientation or window size changes before video plays
+    const handleResize = () => {
+      const isMobileViewport = window.innerWidth < 768;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const newSrc = (isMobileViewport || (isTouchDevice && isPortrait))
+        ? '/introphone.mp4'
+        : '/introdesktop.mp4';
+      setVideoSrc(newSrc);
+    };
+
+    window.addEventListener('resize', handleResize);
+
     // Auto-play video with muted playback guarantee
     if (videoRef.current) {
       videoRef.current.play().catch(() => {
@@ -50,6 +78,10 @@ export default function SplashScreen({ onComplete }) {
         }
       });
     }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (
@@ -65,8 +97,9 @@ export default function SplashScreen({ onComplete }) {
       {/* Video Container preserving aspect ratio across all devices */}
       <div className="relative w-full h-full flex items-center justify-center">
         <video
+          key={videoSrc}
           ref={videoRef}
-          src="/yaathri-intro.mp4"
+          src={videoSrc}
           autoPlay
           muted
           playsInline

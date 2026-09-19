@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import confetti from 'canvas-confetti';
+import RouteMap from './RouteMap';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -366,7 +367,7 @@ export default function ApplyPassModal({ isOpen, onClose, onSubmittedApplication
 
                     <div>
                       <label className="block text-label-md font-label-md text-slate-700 dark:text-slate-300 mb-1 font-medium">
-                        Student Mobile Phone (OTP &amp; NFC)
+                        Student Mobile Phone (OTP &amp; Digital Pass)
                       </label>
                       <input
                         type="tel"
@@ -462,6 +463,17 @@ export default function ApplyPassModal({ isOpen, onClose, onSubmittedApplication
                         <option>KSRTC Ordinary &amp; Fast Passenger Fleets (80% Subsidy)</option>
                         <option>Kochi Metro Line 1 (50% Student Discount)</option>
                       </select>
+                    </div>
+
+                    <div className="sm:col-span-2 pt-2">
+                      <label className="block text-label-md font-label-md text-slate-700 dark:text-slate-300 mb-1 font-medium">
+                        Interactive Commute Corridor Map (OpenStreetMap)
+                      </label>
+                      <RouteMap
+                        startPoint={formData.startingPoint}
+                        endPoint={formData.destination}
+                        height="200px"
+                      />
                     </div>
                   </div>
                 </div>
@@ -567,6 +579,14 @@ export default function ApplyPassModal({ isOpen, onClose, onSubmittedApplication
                       <span className="text-slate-500 dark:text-slate-400">Subsidy Tier:</span>
                       <span className="font-semibold text-sky-600 dark:text-sky-400">{formData.transportType}</span>
                     </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <RouteMap
+                      startPoint={formData.startingPoint}
+                      endPoint={formData.destination}
+                      height="160px"
+                    />
                   </div>
 
                   <div className="flex items-start space-x-2 text-xs text-slate-500 dark:text-slate-400 pt-1">

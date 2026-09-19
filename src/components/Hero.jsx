@@ -34,7 +34,7 @@ export default function Hero({ onOpenApply, onGoVerify, studentData }) {
 
         {/* Supporting fintech copy */}
         <p className="text-body-lg font-body-lg text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-          <span className="font-semibold text-teal-600 dark:text-teal-400">PEOPLE • PLACES • PROGRESS.</span> One unified digital concession pass for smarter, simpler student travel across KSRTC ordinary &amp; fast passenger fleets, Kochi Metro Line 1, and regional Kerala student transit networks. Zero physical tokens. Pure NFC speed.
+          <span className="font-semibold text-teal-600 dark:text-teal-400">PEOPLE • PLACES • PROGRESS.</span> One unified digital concession pass for smarter, simpler student travel across KSRTC ordinary &amp; fast passenger fleets, Kochi Metro Line 1, and regional Kerala student transit networks. Zero physical tokens. Instant QR verification.
         </p>
 
         {/* CTAs & Route Chip */}
@@ -87,7 +87,7 @@ export default function Hero({ onOpenApply, onGoVerify, studentData }) {
           <div>
             <div className="text-numeric-metric font-numeric-metric text-emerald-600 dark:text-emerald-400">0.3s</div>
             <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              NFC Turnstile Gate
+              Instant QR Access
             </div>
           </div>
         </div>

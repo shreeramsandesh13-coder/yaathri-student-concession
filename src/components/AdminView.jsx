@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import confetti from 'canvas-confetti';
+import RouteMap from './RouteMap';
 
 export default function AdminView() {
   const [activeSubTab, setActiveSubTab] = useState('applications'); // 'applications' | 'students' | 'routes' | 'verifications'
@@ -23,6 +24,7 @@ export default function AdminView() {
   const [applications, setApplications] = useState([]);
   const [students, setStudents] = useState([]);
   const [routes, setRoutes] = useState([]);
+  const [selectedRouteForMap, setSelectedRouteForMap] = useState(null);
   const [verifications, setVerifications] = useState([]);
 
   // UI States
@@ -649,28 +651,58 @@ export default function AdminView() {
 
       {/* SUB-TAB 3: TRANSIT ROUTES */}
       {activeSubTab === 'routes' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {routes.map((rt) => (
-            <div
-              key={rt.id}
-              className="p-5 rounded-3xl bg-white/80 dark:bg-[#0D1118]/85 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm text-xs"
-            >
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-bold font-mono">
-                  {rt.route_code}
+        <div className="space-y-4">
+          {/* Interactive OpenStreetMap Route Corridor Viewer */}
+          <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="material-symbols-outlined text-sky-500 text-[20px]">map</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                  Active Transit Corridor Map: {selectedRouteForMap ? `${selectedRouteForMap.from_location} ⇄ ${selectedRouteForMap.to_location}` : (routes[0] ? `${routes[0].from_location} ⇄ ${routes[0].to_location}` : 'Kerala Transit Network')}
                 </span>
-                <span className="text-slate-500 font-mono">{rt.distance_km} KM</span>
               </div>
-              <div className="text-sm font-bold text-slate-900 dark:text-white">
-                {rt.from_location} ⇄ {rt.to_location}
-              </div>
-              <p className="text-slate-500 leading-relaxed">{rt.corridor}</p>
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between text-slate-700 dark:text-slate-300 font-semibold">
-                <span>KSRTC Subsidy: {rt.ksrtc_subsidy_pct}%</span>
-                <span>Metro: {rt.metro_subsidy_pct}%</span>
-              </div>
+              <span className="text-[11px] font-mono text-slate-500">
+                Click any route below to preview corridor
+              </span>
             </div>
-          ))}
+            <RouteMap
+              startPoint={selectedRouteForMap?.from_location || routes[0]?.from_location || 'Thrissur Central'}
+              endPoint={selectedRouteForMap?.to_location || routes[0]?.to_location || 'Ernakulam South'}
+              height="300px"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {routes.map((rt) => {
+              const isSelected = selectedRouteForMap?.id === rt.id || (!selectedRouteForMap && routes[0]?.id === rt.id);
+              return (
+                <div
+                  key={rt.id}
+                  onClick={() => setSelectedRouteForMap(rt)}
+                  className={`p-5 rounded-3xl bg-white/80 dark:bg-[#0D1118]/85 border transition-all cursor-pointer space-y-3 shadow-sm text-xs ${
+                    isSelected
+                      ? 'border-sky-500 ring-2 ring-sky-500/20 shadow-md'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-bold font-mono">
+                      {rt.route_code}
+                    </span>
+                    <span className="text-slate-500 font-mono">{rt.distance_km} KM</span>
+                  </div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white">
+                    {rt.from_location} ⇄ {rt.to_location}
+                  </div>
+                  <p className="text-slate-500 leading-relaxed">{rt.corridor}</p>
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between text-slate-700 dark:text-slate-300 font-semibold">
+                    <span>KSRTC Subsidy: {rt.ksrtc_subsidy_pct}%</span>
+                    <span>Metro: {rt.metro_subsidy_pct}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -992,6 +1024,15 @@ export default function AdminView() {
                     </span>
                   </div>
                 </div>
+
+                {/* Live Route Corridor Map */}
+                <div className="pt-2">
+                  <RouteMap
+                    startPoint={selectedApp.starting_point || selectedApp.route?.from_location || 'Thrissur Central'}
+                    endPoint={selectedApp.destination || selectedApp.route?.to_location || 'Ernakulam South'}
+                    height="200px"
+                  />
+                </div>
               </div>
 
               {/* 3. Uploaded Documents */}
@@ -1046,7 +1087,7 @@ export default function AdminView() {
                     {selectedApp.reviewer_notes && <div><strong>Officer Notes:</strong> {selectedApp.reviewer_notes}</div>}
                     {selectedApp.issued_pass && (
                       <div className="pt-1 text-sky-600 dark:text-sky-400 font-bold">
-                        Digital Pass ID: {selectedApp.issued_pass.pass_number} (Active NFC &amp; QR)
+                        Digital Pass ID: {selectedApp.issued_pass.pass_number} (Secure QR Pass)
                       </div>
                     )}
                   </div>

@@ -33,27 +33,14 @@ export function AuthProvider({ children }) {
           setIsLoading(false);
           return;
         } catch (e) {
-          console.warn('Session expired, logging in as demo student', e);
+          console.warn('Session expired', e);
           localStorage.removeItem('yaathri_token');
           localStorage.removeItem('yaathri_user');
+          setUser(null);
+          setStudent(null);
         }
       }
-
-      // Default: login as Demo Student seamlessly
-      try {
-        const res = await api.auth.login('shreeram.sandesh@cce.edu.in', 'Student@123');
-        setToken(res.access_token);
-        setUser(res.user);
-        localStorage.setItem('yaathri_token', res.access_token);
-        localStorage.setItem('yaathri_user', JSON.stringify(res.user));
-
-        const meRes = await api.auth.getMe();
-        setStudent(meRes.student);
-      } catch (err) {
-        console.warn('Backend offline or initialization note:', err);
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
 
     restoreSession();
@@ -118,8 +105,9 @@ export function AuthProvider({ children }) {
     return login('admin@yaathri.kerala.gov.in', 'Admin@123');
   };
 
-  const role = user?.role || 'STUDENT';
+  const role = user?.role || null;
   const isAdmin = role === 'ADMIN';
+  const isStudent = role === 'STUDENT';
   const isAuthenticated = !!token && !!user;
 
   return (
@@ -130,6 +118,7 @@ export function AuthProvider({ children }) {
         token,
         role,
         isAdmin,
+        isStudent,
         isAuthenticated,
         isLoading,
         authError,

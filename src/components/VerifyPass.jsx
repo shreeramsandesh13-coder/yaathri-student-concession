@@ -1,26 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import jsQR from 'jsqr';
 import { verificationDatabase } from '../data/student';
 import { api } from '../services/api';
 
 /**
  * VerifyPass component:
  * - Comprehensive Conductor & Transit Auditor Inspection Terminal
- * - Modes: LIVE OPTICAL SCANNER SIMULATOR vs MANUAL ID / TOKEN ENTRY
- * - Supports:
- *   1. Permanent Institutional QR ("YAATHRI-ID:...")
- *   2. Single-Use Travel Token ("TT-...") with server-enforced ALREADY_USED check
- *   3. Digital Concession Pass ("SCP-...")
- * - Conductor Anti-Sharing Visual Identity Panel (Student Photo, Roll, Institution)
- * - Clear verdict banners (VERIFIED, ALREADY_USED, EXPIRED, SUSPENDED, INVALID)
- * - Fully adapted for Light and Dark themes
+ * - REAL CAMERA QR SCANNER:
+ *   * Uses navigator.mediaDevices.getUserMedia
+ *   * Prefers rear/environment camera on mobile (facingMode: { ideal: 'environment' })
+ *   * Real-time frame decoding with jsQR on HTML5 Canvas
+ *   * Clean track shutdown on scan success, manual switch, or unmount
+ *   * Robust error handling: Permission Denied, No Camera Detected, Unsupported Browser
+ * - MANUAL PASS / TOKEN INPUT FALLBACK
+ * - ANTI-SHARING VISUAL INSPECTION PANEL:
+ *   * Passenger photograph for visual cross-checking
+ *   * Student details, institution, route, and validity
+ * - REAL BACKEND VALIDATION via /api/qr/verify
+ * - Audit logging directly into database
  */
 export default function VerifyPass() {
   const [activeMode, setActiveMode] = useState('qr'); // 'qr' | 'id'
   const [passInput, setPassInput] = useState('YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012');
   const [isScanning, setIsScanning] = useState(false);
   const [searchedKey, setSearchedKey] = useState('YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012');
-  
-  // Terminal state
+
+  // Camera States: 'idle' | 'starting' | 'active' | 'permission_denied' | 'no_device' | 'unsupported' | 'error'
+  const [cameraState, setCameraState] = useState('idle');
+  const [cameraErrorDetail, setCameraErrorDetail] = useState('');
+
+  // DOM & Stream references
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const isScanningActiveRef = useRef(false);
+
+  // Terminal Verification Output State
   const [verificationResult, setVerificationResult] = useState({
     status: 'ACTIVE',
     isValid: true,
@@ -39,6 +55,143 @@ export default function VerifyPass() {
     message: 'Permanent Institutional ID authenticated. Active concession pass verified against Kerala RTO node.',
   });
 
+  // -------------------------------------------------------------
+  // CAMERA SCANNER CONTROLS
+  // -------------------------------------------------------------
+  const stopCamera = () => {
+    isScanningActiveRef.current = false;
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (e) {
+          console.warn('Track stop error:', e);
+        }
+      });
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraState('idle');
+  };
+
+  const startCamera = async () => {
+    stopCamera();
+    setCameraErrorDetail('');
+
+    // Check browser mediaDevices support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraState('unsupported');
+      setCameraErrorDetail('Browser does not support Camera API or page is not in a secure context (HTTPS/localhost).');
+      return;
+    }
+
+    setCameraState('starting');
+
+    try {
+      // Prefer environment / rear camera on mobile devices
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.muted = true;
+
+        // Play stream once ready
+        await videoRef.current.play();
+        setCameraState('active');
+        isScanningActiveRef.current = true;
+
+        // Start jsQR frame analysis loop
+        requestAnimationFrame(tickScan);
+      }
+    } catch (err) {
+      console.error('Camera initialization error:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraState('permission_denied');
+        setCameraErrorDetail('Camera access was blocked. Please allow camera permissions in your browser address bar.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setCameraState('no_device');
+        setCameraErrorDetail('No physical optical camera device detected on this system. Please use manual code entry.');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setCameraState('error');
+        setCameraErrorDetail('Camera is already in use by another application.');
+      } else {
+        setCameraState('error');
+        setCameraErrorDetail(err.message || 'Could not connect to camera.');
+      }
+    }
+  };
+
+  // Frame processing loop using jsQR
+  const tickScan = () => {
+    if (!isScanningActiveRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (video && video.readyState >= 2 && canvas) {
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      if (width && height) {
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(video, 0, 0, width, height);
+
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const code = jsQR(imageData.data, width, height, {
+          inversionAttempts: 'dontInvert',
+        });
+
+        if (code && code.data && code.data.trim()) {
+          const scannedText = code.data.trim();
+          // Successfully detected a QR Code!
+          stopCamera();
+          setPassInput(scannedText);
+          handleRunVerify(scannedText);
+          return;
+        }
+      }
+    }
+
+    // Keep scanning while active
+    if (isScanningActiveRef.current) {
+      animationFrameRef.current = requestAnimationFrame(tickScan);
+    }
+  };
+
+  // Manage camera on tab change and unmount
+  useEffect(() => {
+    if (activeMode === 'qr') {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [activeMode]);
+
+  // -------------------------------------------------------------
+  // VERIFICATION EXECUTION
+  // -------------------------------------------------------------
   const handleRunVerify = async (overrideId) => {
     const idToSearch = (overrideId || passInput || '').trim();
     if (!idToSearch) return;
@@ -98,10 +251,7 @@ export default function VerifyPass() {
 
   const handleModeChange = (mode) => {
     setActiveMode(mode);
-    if (mode === 'qr') {
-      setPassInput('YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012');
-      handleRunVerify('YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012');
-    } else {
+    if (mode === 'id') {
       setPassInput('SCP-2026-00124');
     }
   };
@@ -124,7 +274,7 @@ export default function VerifyPass() {
           YAATHRI — Student Concession Pass Verification
         </h2>
         <p className="text-body-md font-body-md text-slate-500 dark:text-slate-400 mt-2">
-          Conductor Handheld &amp; Turnstile Audit Console. Validates Permanent Institutional QR, Single-Use Travel Tokens, and Concession Pass Barcodes with anti-sharing visual identity matching.
+          Conductor Handheld &amp; Transit Turnstile Terminal. Inspects live video camera frames with automated QR barcode detection, or fallback to manual cryptographic code entry.
         </p>
       </div>
 
@@ -136,58 +286,189 @@ export default function VerifyPass() {
           <div className="inline-flex p-1 bg-slate-100 dark:bg-[#111722] rounded-xl border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => handleModeChange('qr')}
-              className={`px-5 py-2 rounded-lg text-label-md font-label-md font-bold transition-all cursor-pointer ${
+              className={`px-5 py-2 rounded-lg text-label-md font-label-md font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
                 activeMode === 'qr'
                   ? 'bg-white dark:bg-[#161F2E] text-slate-900 dark:text-white shadow-sm'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              SCANNER CAMERA
+              <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+              <span>LIVE CAMERA SCANNER</span>
             </button>
             <button
               onClick={() => handleModeChange('id')}
-              className={`px-5 py-2 rounded-lg text-label-md font-label-md font-bold transition-all cursor-pointer ${
+              className={`px-5 py-2 rounded-lg text-label-md font-label-md font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
                 activeMode === 'id'
                   ? 'bg-white dark:bg-[#161F2E] text-slate-900 dark:text-white shadow-sm'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              MANUAL PASS / TOKEN
+              <span className="material-symbols-outlined text-[18px]">keyboard</span>
+              <span>MANUAL CODE ENTRY</span>
             </button>
           </div>
 
-          {/* Mode A: Optical Scanner Viewfinder Simulation */}
+          {/* Mode A: Real Video Camera Optical Scanner Viewfinder */}
           {activeMode === 'qr' && (
-            <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 p-6 flex flex-col items-center justify-center min-h-[220px]">
-              {/* Animated Laser Scan Line */}
-              {isScanning && (
-                <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#38bdf8] z-20 animate-laser" />
-              )}
+            <div className="space-y-3">
+              <div className="relative bg-slate-950 rounded-3xl overflow-hidden border border-slate-800 shadow-xl min-h-[300px] flex flex-col items-center justify-center">
+                {/* Live Video Feed */}
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  className={`w-full h-[300px] object-cover transition-opacity duration-300 ${
+                    cameraState === 'active' ? 'opacity-100' : 'opacity-0 absolute'
+                  }`}
+                />
 
-              {/* Targeting Reticle */}
-              <div className="w-44 h-44 border-2 border-dashed border-sky-500/70 rounded-2xl relative flex items-center justify-center bg-sky-950/20">
-                {/* Corner Accents */}
-                <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-sky-400" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-sky-400" />
-                <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-sky-400" />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-sky-400" />
+                {/* Hidden processing canvas */}
+                <canvas ref={canvasRef} className="hidden" />
 
-                <span className="material-symbols-outlined text-[48px] text-sky-400/80 animate-pulse">
-                  qr_code_scanner
-                </span>
+                {/* ACTIVE CAMERA OVERLAY */}
+                {cameraState === 'active' && (
+                  <>
+                    {/* Animated Scanning Laser Line */}
+                    <div className="absolute inset-x-8 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_20px_#38bdf8] z-20 animate-laser" />
+
+                    {/* Viewfinder Target Framing Box */}
+                    <div className="absolute w-56 h-56 border-2 border-dashed border-sky-400/80 rounded-2xl pointer-events-none flex items-center justify-center bg-sky-950/20 backdrop-blur-[1px]">
+                      <div className="absolute -top-1 -left-1 w-5 h-5 border-t-3 border-l-3 border-cyan-400" />
+                      <div className="absolute -top-1 -right-1 w-5 h-5 border-t-3 border-r-3 border-cyan-400" />
+                      <div className="absolute -bottom-1 -left-1 w-5 h-5 border-b-3 border-l-3 border-cyan-400" />
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 border-b-3 border-r-3 border-cyan-400" />
+                    </div>
+
+                    <div className="absolute bottom-3 inset-x-0 text-center z-30">
+                      <span className="text-[11px] font-mono bg-slate-950/80 px-3 py-1 rounded-full text-slate-200 border border-slate-700 backdrop-blur-sm">
+                        Align student QR code within frame
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* STARTING / REQUESTING PERMISSION STATE */}
+                {cameraState === 'starting' && (
+                  <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
+                    <span className="material-symbols-outlined text-[36px] text-sky-400 animate-spin">
+                      refresh
+                    </span>
+                    <div>
+                      <div className="text-sm font-bold text-white">Opening Camera...</div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Please grant camera access when prompted by your browser.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* PERMISSION DENIED STATE */}
+                {cameraState === 'permission_denied' && (
+                  <div className="flex flex-col items-center justify-center p-6 text-center space-y-3 max-w-sm">
+                    <div className="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-500/50 text-rose-400 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[24px]">videocam_off</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-rose-400">Camera Permission Blocked</div>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Camera access was denied. You can enable it in your browser address bar (lock/camera icon) or use manual code entry below.
+                      </p>
+                    </div>
+                    <button
+                      onClick={startCamera}
+                      className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow cursor-pointer transition-all active:scale-95"
+                    >
+                      Retry Permission
+                    </button>
+                  </div>
+                )}
+
+                {/* NO CAMERA DEVICE DETECTED */}
+                {cameraState === 'no_device' && (
+                  <div className="flex flex-col items-center justify-center p-6 text-center space-y-3 max-w-sm">
+                    <div className="w-12 h-12 rounded-full bg-amber-950/80 border border-amber-500/50 text-amber-400 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[24px]">no_photography</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-amber-300">No Camera Detected</div>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        No physical camera was found on this system. You can easily test using the quick verification buttons or type a code below.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleModeChange('id')}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer"
+                    >
+                      Switch to Manual Entry
+                    </button>
+                  </div>
+                )}
+
+                {/* UNSUPPORTED BROWSER OR INSECURE CONTEXT */}
+                {(cameraState === 'unsupported' || cameraState === 'error') && (
+                  <div className="flex flex-col items-center justify-center p-6 text-center space-y-3 max-w-sm">
+                    <div className="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-500/50 text-rose-400 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[24px]">warning</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-rose-400">Camera Unavailable</div>
+                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        {cameraErrorDetail || 'Camera initialization failed.'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={startCamera}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <span className="text-[11px] font-mono text-slate-400 mt-4">
-                Align student QR code within viewfinder
-              </span>
+              {/* Camera Action Toolbar */}
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      cameraState === 'active'
+                        ? 'bg-emerald-500 animate-pulse'
+                        : cameraState === 'starting'
+                        ? 'bg-yellow-500 animate-ping'
+                        : 'bg-slate-400'
+                    }`}
+                  />
+                  <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                    Camera Status: {cameraState.toUpperCase()}
+                  </span>
+                </div>
+
+                {cameraState === 'active' ? (
+                  <button
+                    type="button"
+                    onClick={stopCamera}
+                    className="text-rose-500 hover:text-rose-600 font-bold font-mono text-[11px] cursor-pointer"
+                  >
+                    Pause Camera
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="text-sky-600 dark:text-sky-400 hover:underline font-bold font-mono text-[11px] cursor-pointer"
+                  >
+                    Restart Camera
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Mode B: Manual Input or Code Entry */}
+          {/* Mode B: Manual Input Controls and Quick Test Presets */}
           <div className="space-y-4">
             <div>
               <label className="block text-label-md font-label-md text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
-                QR Payload / Token Code / Pass ID
+                Concession Barcode / Travel Token / Institutional QR
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined text-[20px] text-slate-400 absolute left-4 top-1/2 -translate-y-1/2">

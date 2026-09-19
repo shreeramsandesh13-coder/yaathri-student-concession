@@ -50,14 +50,30 @@ export default function ConcessionCardFront({ studentData }) {
         <span className="h-0.5 w-7 sm:w-10 bg-amber-500 rounded-full" />
       </div>
 
-      {/* CENTER: STUDENT PHOTOGRAPH */}
+      {/* CENTER: STUDENT PHOTOGRAPH (Circular Photo Area) */}
       <div className="relative z-10 flex justify-center my-1.5">
-        <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden border border-slate-300 bg-slate-100 shadow-md relative">
-          <img
-            src={studentData.photoUrl}
-            alt={studentData.name}
-            className="w-full h-full object-cover"
-          />
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-slate-300 bg-slate-100 shadow-md relative flex items-center justify-center shrink-0">
+          {studentData?.photoUrl ? (
+            <img
+              src={studentData.photoUrl}
+              alt="Student Portrait"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.style.display = 'none';
+                if (e.target.nextSibling) {
+                  e.target.nextSibling.style.display = 'flex';
+                }
+              }}
+            />
+          ) : null}
+          <div
+            className={`w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center ${
+              studentData?.photoUrl ? 'hidden' : 'flex'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[36px] sm:text-[44px]">person</span>
+          </div>
         </div>
       </div>
 

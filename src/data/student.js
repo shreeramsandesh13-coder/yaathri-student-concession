@@ -116,7 +116,7 @@ export const initialTimeline = [
     step: 4,
     title: "Digital Pass Active",
     date: "LIVE NOW",
-    description: "NFC cryptographic token loaded on device. Tap-ready at all gates.",
+    description: "Secure QR cryptographic credential active. Scan-ready at all transit gates.",
     completed: true,
     active: true
   }
