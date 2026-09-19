@@ -37,6 +37,10 @@ export default function AdminView() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessingAction, setIsProcessingAction] = useState(false);
 
+  // Verification Filters
+  const [verificationSearch, setVerificationSearch] = useState('');
+  const [verificationStatusFilter, setVerificationStatusFilter] = useState('');
+
   const fetchStats = async () => {
     setStatsLoading(true);
     try {
@@ -81,7 +85,11 @@ export default function AdminView() {
 
   const fetchVerifications = async () => {
     try {
-      const data = await api.admin.listVerifications();
+      const data = await api.admin.listVerifications({
+        search: verificationSearch || null,
+        status_filter: verificationStatusFilter || null,
+        limit: 100,
+      });
       setVerifications(data);
     } catch (e) {
       console.error('Failed to fetch verifications:', e);
@@ -102,7 +110,12 @@ export default function AdminView() {
     } else if (activeSubTab === 'verifications') {
       fetchVerifications();
     }
-  }, [activeSubTab, statusFilter]);
+  }, [activeSubTab, statusFilter, verificationStatusFilter]);
+
+  const handleVerificationSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchVerifications();
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -663,58 +676,174 @@ export default function AdminView() {
 
       {/* SUB-TAB 4: AUDIT LOGS */}
       {activeSubTab === 'verifications' && (
-        <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-sm text-slate-900 dark:text-white flex items-center justify-between">
-            <span>Real-Time Turnstile &amp; Conductor Verification Logs</span>
-            <button
-              onClick={fetchVerifications}
-              className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"
-            >
-              <span className="material-symbols-outlined text-[16px]">refresh</span>
-            </button>
+        <div className="space-y-4">
+          {/* Verification Search & Status Filters */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white/80 dark:bg-[#0D1118]/85 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            {/* Search Input */}
+            <form onSubmit={handleVerificationSearchSubmit} className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                search
+              </span>
+              <input
+                type="text"
+                value={verificationSearch}
+                onChange={(e) => setVerificationSearch(e.target.value)}
+                placeholder="Search logs by student name, roll number, pass ID, terminal..."
+                className="w-full pl-9 pr-9 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500 font-medium"
+              />
+              {verificationSearch && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerificationSearch('');
+                    setTimeout(fetchVerifications, 0);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <span className="material-symbols-outlined text-[16px]">cancel</span>
+                </button>
+              )}
+            </form>
+
+            {/* Filter Chips */}
+            <div className="flex items-center space-x-1.5 overflow-x-auto text-xs font-semibold">
+              <span className="text-slate-400 text-[11px] whitespace-nowrap pr-1">Verdict:</span>
+              {[
+                { id: '', label: 'All' },
+                { id: 'VERIFIED', label: 'Verified' },
+                { id: 'ALREADY_USED', label: 'Already Used' },
+                { id: 'EXPIRED', label: 'Expired' },
+                { id: 'INVALID', label: 'Invalid' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setVerificationStatusFilter(f.id)}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                    verificationStatusFilter === f.id
+                      ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
+                      : 'bg-slate-100 dark:bg-[#111722] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+              <button
+                onClick={fetchVerifications}
+                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
+                title="Refresh verification logs"
+              >
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
+              </button>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-[#111722] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="px-5 py-3">Timestamp</th>
-                  <th className="px-5 py-3">Pass ID Scanned</th>
-                  <th className="px-5 py-3">Terminal / Location</th>
-                  <th className="px-5 py-3">Status</th>
-                  <th className="px-5 py-3">Auditor Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                {verifications.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="px-5 py-3 font-mono text-slate-500">
-                      {new Date(log.verified_at).toLocaleTimeString()}
-                    </td>
-                    <td className="px-5 py-3 font-mono font-bold text-slate-900 dark:text-white">
-                      {log.pass_number_scanned}
-                    </td>
-                    <td className="px-5 py-3 text-slate-700 dark:text-slate-300">
-                      <div>{log.location}</div>
-                      <div className="text-[10px] text-slate-500 font-mono">{log.terminal_code}</div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                          log.status === 'VERIFIED'
-                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                            : 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
-                        }`}
-                      >
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-slate-600 dark:text-slate-400">
-                      {log.notes || '—'}
-                    </td>
+
+          {/* Audit Logs Table */}
+          <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-[#111722] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="px-5 py-3.5">Timestamp</th>
+                    <th className="px-5 py-3.5">Scanned Token / Pass</th>
+                    <th className="px-5 py-3.5">Student / Passenger</th>
+                    <th className="px-5 py-3.5">Corridor / Terminal</th>
+                    <th className="px-5 py-3.5">Verdict</th>
+                    <th className="px-5 py-3.5">Auditor / Failure Telemetry</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
+                  {verifications.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
+                        <div className="flex flex-col items-center justify-center space-y-2 max-w-sm mx-auto">
+                          <span className="material-symbols-outlined text-[36px] text-slate-400">
+                            history
+                          </span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">
+                            No verification logs match criteria
+                          </span>
+                          <span className="text-[11px] text-slate-500">
+                            Try adjusting your search or verdict filter.
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    verifications.map((log) => (
+                      <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="px-5 py-3.5 font-mono text-slate-500 whitespace-nowrap">
+                          {new Date(log.verified_at).toLocaleTimeString()}
+                          <div className="text-[10px] text-slate-400">
+                            {new Date(log.verified_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 font-mono font-bold text-slate-900 dark:text-white">
+                          <div className="truncate max-w-[180px]">{log.pass_number_scanned}</div>
+                          <span className="text-[10px] text-slate-400 font-sans block">
+                            {log.pass_number_scanned.startsWith('TT-')
+                              ? 'Single-Use Token'
+                              : log.pass_number_scanned.startsWith('YAATHRI-ID:')
+                              ? 'Permanent Institutional QR'
+                              : 'Concession Pass'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-800 dark:text-slate-200">
+                          {log.student_name ? (
+                            <div>
+                              <div className="font-bold">{log.student_name}</div>
+                              <div className="text-[10px] text-slate-500 font-mono">{log.student_roll}</div>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic">Unidentified Passenger</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
+                          <div>{log.location}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">
+                            {log.terminal_code}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono ${
+                              log.status === 'VERIFIED'
+                                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                                : log.status === 'ALREADY_USED'
+                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
+                                : log.status === 'EXPIRED'
+                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
+                                : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                log.status === 'VERIFIED'
+                                  ? 'bg-emerald-500'
+                                  : log.status === 'EXPIRED'
+                                  ? 'bg-amber-500'
+                                  : 'bg-rose-500'
+                              }`}
+                            />
+                            {log.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400 max-w-xs">
+                          {log.failure_reason ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-semibold block text-[11px]">
+                              {log.failure_reason}
+                            </span>
+                          ) : (
+                            <span className="text-slate-600 dark:text-slate-400 block text-[11px]">
+                              {log.notes || 'Routine terminal check.'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

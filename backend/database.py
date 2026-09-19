@@ -63,6 +63,52 @@ def upgrade_db_schema():
                     conn.exec_driver_sql("ALTER TABLE students ADD COLUMN institution_type VARCHAR(50) DEFAULT 'College'")
                 if "semester" not in student_cols:
                     conn.exec_driver_sql("ALTER TABLE students ADD COLUMN semester VARCHAR(50) DEFAULT 'Semester 5'")
+                if "institutional_qr_code" not in student_cols:
+                    conn.exec_driver_sql("ALTER TABLE students ADD COLUMN institutional_qr_code VARCHAR(100)")
+                conn.commit()
+
+            # Check passes table
+            pass_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(passes)").fetchall()]
+            if pass_cols:
+                if "student_name" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN student_name VARCHAR(150)")
+                if "student_photo_url" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN student_photo_url TEXT")
+                if "institution_name" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN institution_name VARCHAR(200)")
+                if "course" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN course VARCHAR(100)")
+                if "roll_number" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN roll_number VARCHAR(50)")
+                if "student_id_number" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN student_id_number VARCHAR(50)")
+                if "transport_type" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN transport_type VARCHAR(50) DEFAULT 'Bus'")
+                if "starting_point" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN starting_point VARCHAR(150)")
+                if "destination" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN destination VARCHAR(150)")
+                if "route_name" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN route_name VARCHAR(255)")
+                if "valid_from" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN valid_from VARCHAR(30) DEFAULT '01 / 06 / 2024'")
+                if "valid_until" not in pass_cols:
+                    conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN valid_until VARCHAR(30) DEFAULT '31 / 03 / 2027'")
+                conn.commit()
+
+            # Check verification_logs table
+            log_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(verification_logs)").fetchall()]
+            if log_cols:
+                if "student_name" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN student_name VARCHAR(150)")
+                if "student_roll" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN student_roll VARCHAR(50)")
+                if "route_name" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN route_name VARCHAR(255)")
+                if "verifier_identity" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN verifier_identity VARCHAR(100)")
+                if "failure_reason" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN failure_reason TEXT")
                 conn.commit()
     except Exception as e:
         print("Schema upgrade notice:", e)

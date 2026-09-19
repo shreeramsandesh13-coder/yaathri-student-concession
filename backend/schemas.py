@@ -54,6 +54,7 @@ class StudentOut(BaseModel):
     student_address: str
     college_address: str
     photo_url: Optional[str] = None
+    institutional_qr_code: Optional[str] = None
     created_at: datetime.datetime
 
     class Config:
@@ -118,6 +119,18 @@ class PassOut(BaseModel):
     pass_number: str
     student_id: int
     route_id: Optional[int] = None
+    student_name: Optional[str] = None
+    student_photo_url: Optional[str] = None
+    institution_name: Optional[str] = None
+    course: Optional[str] = None
+    roll_number: Optional[str] = None
+    student_id_number: Optional[str] = None
+    transport_type: Optional[str] = "Bus"
+    starting_point: Optional[str] = None
+    destination: Optional[str] = None
+    route_name: Optional[str] = None
+    valid_from: Optional[str] = None
+    valid_until: Optional[str] = None
     issue_date: str
     expiry_date: str
     status: str
@@ -204,15 +217,24 @@ class QRVerifyRequest(BaseModel):
     location: Optional[str] = "Aluva Metro Station Turnstile #4"
 
 class QRVerifyResponse(BaseModel):
-    status: str  # "VERIFIED", "EXPIRED", "INVALID"
+    status: str  # "VERIFIED", "EXPIRED", "SUSPENDED", "INVALID", "ALREADY_USED"
     status_code: str
+    is_valid: bool = False
     pass_number: str
     student_name: Optional[str] = None
+    student_photo: Optional[str] = None
     college: Optional[str] = None
+    roll_number: Optional[str] = None
+    student_id_number: Optional[str] = None
+    transport: Optional[str] = None
     route: Optional[str] = None
+    valid_from: Optional[str] = None
     valid_until: Optional[str] = None
     subsidy_rate: Optional[str] = None
+    token_type: Optional[str] = None  # "INSTITUTIONAL_QR", "TRAVEL_TOKEN", "CONCESSION_PASS"
+    failure_reason: Optional[str] = None
     message: str
+    verified_at: Optional[datetime.datetime] = None
 
 class TravelTokenGenerateRequest(BaseModel):
     pass_id: int
@@ -242,9 +264,14 @@ class VerificationLogOut(BaseModel):
     pass_number_scanned: str
     terminal_code: str
     location: str
+    student_name: Optional[str] = None
+    student_roll: Optional[str] = None
+    route_name: Optional[str] = None
+    verifier_identity: Optional[str] = None
     status: str
     status_code: str
-    notes: Optional[str]
+    failure_reason: Optional[str] = None
+    notes: Optional[str] = None
     verified_at: datetime.datetime
 
     class Config:

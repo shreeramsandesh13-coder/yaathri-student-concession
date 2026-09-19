@@ -133,7 +133,10 @@ def seed_database():
             institution_id=inst1.id,
             full_name="Shreeram Sandesh",
             roll_number="CCE24CS001",
+            student_id_number="STU-2024-8841",
+            institution_name="Christ College of Engineering, Irinjalakuda",
             course="B.Tech Computer Science",
+            semester="Semester 5",
             year_semester="3rd Year (Semester 5)",
             phone="+91 98470 12345",
             age="21",
@@ -142,14 +145,18 @@ def seed_database():
             emergency_phone="+91 94471 98765",
             student_address="Flat 4B, Emerald Heights, Mission Quarters, Thrissur – 680001",
             college_address="Christ College of Engineering, Irinjalakuda, Thrissur – 680125",
-            photo_url="https://lh3.googleusercontent.com/aida-public/AB6AXuDxIOtGgfZ1xzAMTLlUAwHX9CcdtIFuDQY4RTI4qWrBjRHW7uru56nH1vurIQKUsbkhbp-43R4ptwoUlode-NXOPgdADsjJybp_UaGdHLFxWPnmoMH-XpFW0AFvy2WBXFqfUqy5lpAsux4nvmvXgvwmzOmC59WAiMH5jxkxMKC_07AlcPSWEnmfW1V637TgWonkvOAuFsu4p9zIfPSF5aJ5iD2ebYMtCGNnsy5CqNYrvksyIuTg39TU"
+            photo_url="https://lh3.googleusercontent.com/aida-public/AB6AXuDxIOtGgfZ1xzAMTLlUAwHX9CcdtIFuDQY4RTI4qWrBjRHW7uru56nH1vurIQKUsbkhbp-43R4ptwoUlode-NXOPgdADsjJybp_UaGdHLFxWPnmoMH-XpFW0AFvy2WBXFqfUqy5lpAsux4nvmvXgvwmzOmC59WAiMH5jxkxMKC_07AlcPSWEnmfW1V637TgWonkvOAuFsu4p9zIfPSF5aJ5iD2ebYMtCGNnsy5CqNYrvksyIuTg39TU",
+            institutional_qr_code="YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012"
         )
         student2 = models.Student(
             user_id=student2_user.id,
             institution_id=inst2.id,
             full_name="Ananya Nair",
             roll_number="RSET24EC042",
+            student_id_number="STU-2024-8842",
+            institution_name="Rajagiri School of Engineering & Technology",
             course="B.Tech Electronics & Comm",
+            semester="Semester 3",
             year_semester="2nd Year (Semester 3)",
             phone="+91 94470 54321",
             age="20",
@@ -158,14 +165,18 @@ def seed_database():
             emergency_phone="+91 98471 11223",
             student_address="Nair Villa, Palarivattom, Ernakulam – 682025",
             college_address="Rajagiri School of Engineering, Kakkanad – 682039",
-            photo_url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=350&fit=crop"
+            photo_url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=350&fit=crop",
+            institutional_qr_code="YAATHRI-ID:3d1e7a54b98c4f10a82e661203498cb1"
         )
         student3 = models.Student(
             user_id=student3_user.id,
             institution_id=inst1.id,
             full_name="Rahul Menon",
             roll_number="CCE24ME019",
+            student_id_number="STU-2024-8819",
+            institution_name="Christ College of Engineering, Irinjalakuda",
             course="B.Tech Mechanical Eng",
+            semester="Semester 7",
             year_semester="4th Year (Semester 7)",
             phone="+91 94950 99887",
             age="22",
@@ -174,7 +185,8 @@ def seed_database():
             emergency_phone="+91 94951 88776",
             student_address="Menon Cottage, Irinjalakuda Town – 680121",
             college_address="Christ College of Engineering, Irinjalakuda – 680125",
-            photo_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=350&fit=crop"
+            photo_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=350&fit=crop",
+            institutional_qr_code="YAATHRI-ID:8a72e911c4b2450ea1d8487b321a99ef"
         )
         db.add_all([student1, student2, student3])
         db.flush()
@@ -237,6 +249,18 @@ def seed_database():
             student_id=student1.id,
             route_id=route1.id,
             application_id=app1.id,
+            student_name="Shreeram Sandesh",
+            student_photo_url=student1.photo_url,
+            institution_name="Christ College of Engineering, Irinjalakuda",
+            course="B.Tech Computer Science",
+            roll_number="CCE24CS001",
+            student_id_number="STU-2024-8841",
+            transport_type="Bus & Metro",
+            starting_point="Thrissur Central",
+            destination="Ernakulam South",
+            route_name="LINE K-04 (NH 544 Corridor)",
+            valid_from="01 / 06 / 2024",
+            valid_until="31 / 03 / 2027",
             issue_date="01 / 06 / 2024",
             expiry_date="31 / 03 / 2027",
             status="ACTIVE",
@@ -249,6 +273,18 @@ def seed_database():
             pass_number="SCP-2025-00088",
             student_id=student3.id,
             route_id=route2.id,
+            student_name="Rahul Menon",
+            student_photo_url=student3.photo_url,
+            institution_name="Christ College of Engineering, Irinjalakuda",
+            course="B.Tech Mechanical Eng",
+            roll_number="CCE24ME019",
+            student_id_number="STU-2024-8819",
+            transport_type="Bus",
+            starting_point="Thrissur Central",
+            destination="Kunnamkulam Stand",
+            route_name="LINE K-12 (SH 22 Corridor)",
+            valid_from="01 / 06 / 2023",
+            valid_until="31 / 03 / 2024",
             issue_date="01 / 06 / 2023",
             expiry_date="31 / 03 / 2024",
             status="EXPIRED",
@@ -274,6 +310,10 @@ def seed_database():
             pass_number_scanned="SCP-2026-00124",
             terminal_code="TERMINAL-KL-RTO-TCR",
             location="Aluva Metro Station Turnstile #4",
+            student_name="Shreeram Sandesh",
+            student_roll="CCE24CS001",
+            route_name="LINE K-04 (Thrissur ⇄ Ernakulam)",
+            verifier_identity="KMRL Turnstile Terminal #4",
             status="VERIFIED",
             status_code="200 OK",
             notes="Cryptographic signature verified against Kerala RTO node."
@@ -283,6 +323,10 @@ def seed_database():
             pass_number_scanned="SCP-2026-00124",
             terminal_code="CONDUCTOR-HANDHELD-KL-15",
             location="KSRTC Fast Passenger (KL-15-A-8921)",
+            student_name="Shreeram Sandesh",
+            student_roll="CCE24CS001",
+            route_name="LINE K-04 (Thrissur ⇄ Ernakulam)",
+            verifier_identity="Conductor Device KL-15",
             status="VERIFIED",
             status_code="200 OK",
             notes="Conductor inspected and validated student credentials."
@@ -292,8 +336,13 @@ def seed_database():
             pass_number_scanned="SCP-2025-00088",
             terminal_code="TERMINAL-KL-RTO-TCR",
             location="Thrissur Central Stand Gate 2",
+            student_name="Rahul Menon",
+            student_roll="CCE24ME019",
+            route_name="LINE K-12 (Thrissur ⇄ Kunnamkulam)",
+            verifier_identity="KSRTC Gate Scanner TCR-02",
             status="EXPIRED",
             status_code="403 EXPIRED",
+            failure_reason="CONCESSION EXPIRED: Academic year validity ended 31 / 03 / 2024",
             notes="Attempted scan of pass expired on 31 / 03 / 2024."
         )
         db.add_all([log1, log2, log3])

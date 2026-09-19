@@ -55,6 +55,7 @@ class Student(Base):
     student_address = Column(Text, default="Flat 4B, Emerald Heights, Mission Quarters, Thrissur – 680001")
     college_address = Column(Text, default="Christ College of Engineering, Irinjalakuda, Thrissur – 680125")
     photo_url = Column(Text, nullable=True)
+    institutional_qr_code = Column(String(100), unique=True, index=True, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
@@ -144,6 +145,20 @@ class Pass(Base):
     route_id = Column(Integer, ForeignKey("routes.id"), nullable=False)
     application_id = Column(Integer, ForeignKey("applications.id"), nullable=True)
     
+    # Snapshot details
+    student_name = Column(String(150), nullable=True)
+    student_photo_url = Column(Text, nullable=True)
+    institution_name = Column(String(200), nullable=True)
+    course = Column(String(100), nullable=True)
+    roll_number = Column(String(50), nullable=True)
+    student_id_number = Column(String(50), nullable=True)
+    transport_type = Column(String(50), default="Bus")
+    starting_point = Column(String(150), nullable=True)
+    destination = Column(String(150), nullable=True)
+    route_name = Column(String(255), nullable=True)
+    valid_from = Column(String(30), default="01 / 06 / 2024")
+    valid_until = Column(String(30), default="31 / 03 / 2027")
+
     issue_date = Column(String(30), default="01 / 06 / 2024")
     expiry_date = Column(String(30), default="31 / 03 / 2027")
     status = Column(String(50), default="ACTIVE", index=True)  # ACTIVE, EXPIRED, SUSPENDED
@@ -196,8 +211,13 @@ class VerificationLog(Base):
     pass_number_scanned = Column(String(50), index=True, nullable=False)
     terminal_code = Column(String(100), default="TERMINAL-KL-RTO-TCR")
     location = Column(String(150), default="Aluva Metro Station Turnstile #4")
-    status = Column(String(50), nullable=False)  # "VERIFIED", "EXPIRED", "INVALID"
+    student_name = Column(String(150), nullable=True)
+    student_roll = Column(String(50), nullable=True)
+    route_name = Column(String(255), nullable=True)
+    verifier_identity = Column(String(100), nullable=True)
+    status = Column(String(50), nullable=False)  # "VERIFIED", "EXPIRED", "INVALID", "ALREADY_USED"
     status_code = Column(String(50), default="200 OK")
+    failure_reason = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     verified_at = Column(DateTime, default=datetime.datetime.utcnow)
 

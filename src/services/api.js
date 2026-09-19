@@ -126,6 +126,12 @@ export const api = {
       });
       return handleResponse(res);
     },
+    async getActive() {
+      const res = await fetch(`${API_BASE}/passes/active`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
   },
 
   // Transit Routes
@@ -142,6 +148,12 @@ export const api = {
 
   // QR Verification & Tokens
   qr: {
+    async getInstitutional() {
+      const res = await fetch(`${API_BASE}/qr/institutional-qr`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
     async generate(passId) {
       const res = await fetch(`${API_BASE}/qr/generate`, {
         method: 'POST',
@@ -272,8 +284,14 @@ export const api = {
       });
       return handleResponse(res);
     },
-    async listVerifications(limit = 50) {
-      const res = await fetch(`${API_BASE}/admin/verifications?limit=${limit}`, {
+    async listVerifications(options = {}) {
+      const { limit = 100, search = '', status_filter = '' } =
+        typeof options === 'number' ? { limit: options } : options;
+      const params = new URLSearchParams();
+      if (limit) params.append('limit', limit);
+      if (search) params.append('search', search);
+      if (status_filter) params.append('status_filter', status_filter);
+      const res = await fetch(`${API_BASE}/admin/verifications?${params.toString()}`, {
         headers: getAuthHeaders(),
       });
       return handleResponse(res);

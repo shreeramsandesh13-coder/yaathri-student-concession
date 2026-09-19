@@ -191,7 +191,99 @@ def test_auth_login():
     assert approved_app["issued_pass"]["status"] == "ACTIVE"
     print(f"[PASS] Application approved and Digital Pass ({approved_app['issued_pass']['pass_number']}) activated")
 
+    # 15. Student Institutional QR Code
+    res = client.get("/api/qr/institutional-qr", headers={"Authorization": f"Bearer {student_token}"})
+    assert res.status_code == 200
+    inst_data = res.json()
+    assert "institutional_qr_code" in inst_data
+    inst_qr = inst_data["institutional_qr_code"]
+    assert inst_qr.startswith("YAATHRI-ID:")
+    print(f"[PASS] Student Institutional QR retrieved: {inst_qr}")
+
+    # 16. Verify Permanent Institutional QR Code
+    res = client.post("/api/qr/verify", json={
+        "pass_number_or_qr": inst_qr,
+        "terminal_code": "INSPECTOR-HANDHELD-01",
+        "location": "KSRTC Fast Passenger #12"
+    })
+    assert res.status_code == 200
+    inst_verify = res.json()
+    assert inst_verify["is_valid"] == True
+    assert inst_verify["status"] == "VERIFIED"
+    assert inst_verify["token_type"] == "INSTITUTIONAL_QR"
+    assert "Shreeram Sandesh" in inst_verify["student_name"]
+    print(f"[PASS] Institutional QR scan verified for {inst_verify['student_name']} ({inst_verify['pass_number']})")
+
+    # 17. Single-Use Travel Token Enforcement
+    # Generate token
+    res = client.post("/api/travel-token/generate", json={
+        "pass_id": 1,
+        "turnstile_gate": "GATE-02-KALOOR"
+    }, headers={"Authorization": f"Bearer {student_token}"})
+    assert res.status_code == 200
+    single_token = res.json()["token_code"]
+    assert single_token.startswith("TT-")
+
+    # 1st scan -> Must succeed (VERIFIED)
+    res = client.post("/api/qr/verify", json={
+        "pass_number_or_qr": single_token,
+        "terminal_code": "TURNSTILE-GATE-02",
+        "location": "Kaloor Metro Station Turnstile Gate 2"
+    })
+    assert res.status_code == 200
+    first_scan = res.json()
+    assert first_scan["is_valid"] == True
+    assert first_scan["status"] == "VERIFIED"
+    assert first_scan["token_type"] == "TRAVEL_TOKEN"
+    print(f"[PASS] Travel Token 1st scan succeeded: {single_token}")
+
+    # 2nd scan -> Must be rejected as ALREADY_USED (Server-side enforced)
+    res = client.post("/api/qr/verify", json={
+        "pass_number_or_qr": single_token,
+        "terminal_code": "TURNSTILE-GATE-02",
+        "location": "Kaloor Metro Station Turnstile Gate 2"
+    })
+    assert res.status_code == 200
+    second_scan = res.json()
+    assert second_scan["is_valid"] == False
+    assert second_scan["status"] == "ALREADY_USED"
+    assert "ALREADY USED" in second_scan["failure_reason"]
+    print(f"[PASS] Travel Token 2nd scan correctly rejected as ALREADY_USED (Anti-passback protection)")
+
+    # 18. Expired Pass Verification Check
+    res = client.post("/api/qr/verify", json={
+        "pass_number_or_qr": "SCP-2025-00088",
+        "terminal_code": "TERMINAL-KL-RTO-TCR",
+        "location": "Thrissur Central Stand Gate 2"
+    })
+    assert res.status_code == 200
+    exp_verify = res.json()
+    assert exp_verify["is_valid"] == False
+    assert exp_verify["status"] == "EXPIRED"
+    print(f"[PASS] Expired pass correctly identified (Status: EXPIRED, valid_until: {exp_verify['valid_until']})")
+
+    # 19. Admin Verification Logs with Search and Filter
+    res = client.get("/api/admin/verifications", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    logs = res.json()
+    assert len(logs) > 0
+    print(f"[PASS] Admin retrieved {len(logs)} audit logs")
+
+    # Filter logs by VERIFIED
+    res = client.get("/api/admin/verifications?status_filter=VERIFIED", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    verified_logs = res.json()
+    assert all(l["status"] == "VERIFIED" for l in verified_logs)
+    print(f"[PASS] Admin verification status filter passed: found {len(verified_logs)} verified records")
+
+    # Search logs by "Shreeram"
+    res = client.get("/api/admin/verifications?search=Shreeram", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    shreeram_logs = res.json()
+    assert len(shreeram_logs) > 0
+    print(f"[PASS] Admin verification search passed: found {len(shreeram_logs)} records for 'Shreeram'")
+
 if __name__ == "__main__":
     test_health()
     test_auth_login()
-    print("\nALL BACKEND API, ADMIN WORKFLOW & SECURITY TESTS PASSED SUCCESSFULLY!")
+    print("\nALL 19 BACKEND API, DIGITAL PASS, QR AUDIT & SECURITY TESTS PASSED SUCCESSFULLY!")

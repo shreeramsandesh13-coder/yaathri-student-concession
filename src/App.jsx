@@ -47,6 +47,9 @@ function MainApp() {
       let rejectionReason = null;
       let appNumber = 'APP-2026-00124';
 
+      let activePassObj = null;
+      let instQr = student.institutional_qr_code || null;
+
       try {
         const apps = await api.applications.list();
         if (apps && apps.length > 0) {
@@ -57,10 +60,28 @@ function MainApp() {
           if (latestApp.issued_pass) {
             passNum = latestApp.issued_pass.pass_number;
             validDate = latestApp.issued_pass.expiry_date || validDate;
+            activePassObj = latestApp.issued_pass;
           }
         }
       } catch (e) {
         console.warn('Could not load student applications list:', e);
+      }
+
+      try {
+        const [instRes, passRes] = await Promise.allSettled([
+          api.qr.getInstitutional(),
+          api.passes.getActive()
+        ]);
+        if (instRes.status === 'fulfilled' && instRes.value?.institutional_qr_code) {
+          instQr = instRes.value.institutional_qr_code;
+        }
+        if (passRes.status === 'fulfilled' && passRes.value) {
+          activePassObj = passRes.value;
+          passNum = activePassObj.pass_number || passNum;
+          validDate = activePassObj.valid_until || activePassObj.expiry_date || validDate;
+        }
+      } catch (e) {
+        console.warn('Could not fetch active pass or institutional qr:', e);
       }
 
       setStudentData((prev) => ({
@@ -68,16 +89,25 @@ function MainApp() {
         id: student.id,
         name: baseName,
         rollNo: student.roll_number || prev.rollNo,
+        studentIdNumber: student.student_id_number || prev.studentIdNumber || 'STU-2024-8841',
         college: student.institution_name || student.college_address || student.institution?.name || prev.college,
         course: student.course || prev.course,
         year: student.semester || student.year_semester || prev.year,
         bloodGroup: student.blood_group || prev.bloodGroup,
         photoUrl: student.photo_url || prev.photoUrl,
+        passId: activePassObj?.id || prev.passId || 1,
         passNumber: passNum,
         validUntil: validDate,
         status: currentStatus,
         applicationId: appNumber,
         rejectionReason: rejectionReason,
+        institutionalQrCode: instQr || prev.institutionalQrCode || 'YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012',
+        routeCorridor: activePassObj?.route_name || activePassObj?.route?.corridor || prev.routeCorridor,
+        origin: activePassObj?.starting_point || activePassObj?.route?.from_location || prev.origin,
+        destination: activePassObj?.destination || activePassObj?.route?.to_location || prev.destination,
+        transportMode: activePassObj?.transport_type || prev.transportMode || 'Bus & Metro',
+        subsidyRate: activePassObj?.subsidy_rate || prev.subsidyRate || '80% KSRTC / 50% METRO',
+        issueDate: activePassObj?.valid_from || activePassObj?.issue_date || prev.issueDate,
       }));
 
       // Dynamically sync timeline based on real application status

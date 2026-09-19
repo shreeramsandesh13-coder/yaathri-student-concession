@@ -1,6 +1,7 @@
 import datetime
 import random
 import hashlib
+import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -93,18 +94,38 @@ def approve_application(
     app.reviewer_notes = (req.reviewer_notes if req and req.reviewer_notes else "Verified and endorsed under Kerala MVD Student Concession Guidelines.")
     app.rejection_reason = None
 
-    # Check if a Digital Pass already exists for this application
+    # Ensure student has a permanent institutional QR code identifier
+    if app.student and not app.student.institutional_qr_code:
+        app.student.institutional_qr_code = f"YAATHRI-ID:{uuid.uuid4().hex}"
+
+    # Check if a Digital Pass already exists for this application or student
     existing_pass = db.query(models.Pass).filter(
         (models.Pass.application_id == app.id) |
         (models.Pass.student_id == app.student_id)
     ).first()
 
     pass_number = ""
+    from_loc = app.starting_point or (app.route.from_location if app.route else "Origin")
+    to_loc = app.destination or (app.route.to_location if app.route else "Destination")
+    route_name_val = app.route_name or (f"{from_loc} ⇄ {to_loc}" if (from_loc and to_loc) else "Kerala Transit Corridor")
+
     if existing_pass:
         existing_pass.status = "ACTIVE"
         existing_pass.application_id = app.id
         if app.route_id:
             existing_pass.route_id = app.route_id
+        existing_pass.student_name = app.student.full_name if app.student else existing_pass.student_name
+        existing_pass.student_photo_url = app.student.photo_url if app.student else existing_pass.student_photo_url
+        existing_pass.institution_name = (app.student.institution_name or app.student.college_address) if app.student else existing_pass.institution_name
+        existing_pass.course = app.student.course if app.student else existing_pass.course
+        existing_pass.roll_number = app.student.roll_number if app.student else existing_pass.roll_number
+        existing_pass.student_id_number = (app.student.student_id_number or "STU-2024-8841") if app.student else existing_pass.student_id_number
+        existing_pass.transport_type = app.transport_mode or "Bus"
+        existing_pass.starting_point = from_loc
+        existing_pass.destination = to_loc
+        existing_pass.route_name = route_name_val
+        existing_pass.valid_from = app.validity_start or existing_pass.valid_from or "01 / 06 / 2024"
+        existing_pass.valid_until = app.validity_end or "31 / 03 / 2027"
         existing_pass.expiry_date = app.validity_end or "31 / 03 / 2027"
         pass_number = existing_pass.pass_number
     else:
@@ -121,6 +142,18 @@ def approve_application(
             student_id=app.student_id,
             route_id=route_id,
             application_id=app.id,
+            student_name=app.student.full_name if app.student else "Student",
+            student_photo_url=app.student.photo_url if app.student else None,
+            institution_name=(app.student.institution_name or app.student.college_address) if app.student else None,
+            course=app.student.course if app.student else None,
+            roll_number=app.student.roll_number if app.student else None,
+            student_id_number=(app.student.student_id_number or "STU-2024-8841") if app.student else None,
+            transport_type=app.transport_mode or "Bus",
+            starting_point=from_loc,
+            destination=to_loc,
+            route_name=route_name_val,
+            valid_from=app.validity_start or "01 / 06 / 2024",
+            valid_until=app.validity_end or "31 / 03 / 2027",
             issue_date=datetime.date.today().strftime("%d / %m / %Y"),
             expiry_date=app.validity_end or "31 / 03 / 2027",
             status="ACTIVE",
@@ -238,8 +271,22 @@ def create_route_admin(req: schemas.RouteCreate, db: Session = Depends(get_db)):
 
 @router.get("/verifications", response_model=List[schemas.VerificationLogOut])
 def list_verification_logs(
-    limit: int = 50,
+    search: Optional[str] = None,
+    status_filter: Optional[str] = None,
+    limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    return db.query(models.VerificationLog).order_by(models.VerificationLog.verified_at.desc()).limit(limit).all()
+    query = db.query(models.VerificationLog)
+    if status_filter:
+        query = query.filter(models.VerificationLog.status == status_filter.upper())
+    if search:
+        s = f"%{search.strip()}%"
+        query = query.filter(
+            (models.VerificationLog.pass_number_scanned.ilike(s)) |
+            (models.VerificationLog.student_name.ilike(s)) |
+            (models.VerificationLog.student_roll.ilike(s)) |
+            (models.VerificationLog.terminal_code.ilike(s)) |
+            (models.VerificationLog.location.ilike(s))
+        )
+    return query.order_by(models.VerificationLog.verified_at.desc()).limit(limit).all()
 
