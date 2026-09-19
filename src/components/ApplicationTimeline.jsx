@@ -29,9 +29,50 @@ export default function ApplicationTimeline({ timeline, studentData }) {
         </div>
       </div>
 
+      {/* Rejection Alert Banner if applicable */}
+      {studentData.rejectionReason && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start space-x-3 text-xs animate-fade-in">
+          <span className="material-symbols-outlined text-rose-600 dark:text-rose-400 text-[22px] shrink-0">
+            warning
+          </span>
+          <div>
+            <span className="font-bold text-rose-800 dark:text-rose-300 text-sm block">
+              Concession Request Rejected by Administrative Officer
+            </span>
+            <p className="text-rose-700 dark:text-rose-400 mt-1 font-medium">
+              <strong>Official Feedback:</strong> {studentData.rejectionReason}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Horizontal Status Progression Tracker */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {timeline.map((step) => {
+          if (step.isError) {
+            return (
+              <div
+                key={step.step}
+                className="bg-rose-950/80 text-white rounded-2xl p-4 border border-rose-500/60 relative shadow-md"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold">
+                    ✕
+                  </span>
+                  <span className="text-label-caps font-label-caps text-rose-300 uppercase font-bold">
+                    {step.date}
+                  </span>
+                </div>
+                <h3 className="text-label-lg font-label-lg text-white font-semibold">
+                  {step.title}
+                </h3>
+                <p className="text-body-sm font-body-sm text-rose-200 mt-1">
+                  {step.description}
+                </p>
+              </div>
+            );
+          }
+
           if (step.active) {
             return (
               <div

@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
+from database import engine, Base, upgrade_db_schema
 import models
 
 # Import routers
@@ -14,6 +14,7 @@ from routers import auth, students, applications, passes, routes, qr_tokens, not
 
 # Create database tables automatically
 Base.metadata.create_all(bind=engine)
+upgrade_db_schema()
 
 app = FastAPI(
     title="YAATHRI (യാത്രി) — Student Concession Mobility API",

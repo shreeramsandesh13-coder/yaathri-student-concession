@@ -41,7 +41,11 @@ class Student(Base):
     
     full_name = Column(String(150), nullable=False)
     roll_number = Column(String(50), index=True, nullable=False)
+    student_id_number = Column(String(50), default="STU-2024-8841")
+    institution_name = Column(String(200), default="Christ College of Engineering, Irinjalakuda")
+    institution_type = Column(String(50), default="College")
     course = Column(String(100), default="B.Tech Computer Science")
+    semester = Column(String(50), default="Semester 5")
     year_semester = Column(String(50), default="3rd Year (Semester 5)")
     phone = Column(String(50), nullable=False)
     age = Column(String(10), default="21")
@@ -96,12 +100,20 @@ class Application(Base):
     id = Column(Integer, primary_key=True, index=True)
     application_number = Column(String(50), unique=True, index=True, nullable=False)
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
-    route_id = Column(Integer, ForeignKey("routes.id"), nullable=False)
+    route_id = Column(Integer, ForeignKey("routes.id"), nullable=True)
+    transport_mode = Column(String(50), default="Bus")
+    starting_point = Column(String(150), nullable=True)
+    destination = Column(String(150), nullable=True)
+    route_name = Column(String(255), nullable=True)
+    validity_start = Column(String(50), default="01 / 06 / 2026")
+    validity_end = Column(String(50), default="31 / 03 / 2027")
     academic_year = Column(String(50), default="2024–2027")
     status = Column(String(50), default="PENDING", index=True)  # PENDING, APPROVED, REJECTED
     applied_at = Column(DateTime, default=datetime.datetime.utcnow)
     reviewed_at = Column(DateTime, nullable=True)
     reviewer_notes = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    reviewer_name = Column(String(150), nullable=True)
 
     # Relationships
     student = relationship("Student", back_populates="applications")

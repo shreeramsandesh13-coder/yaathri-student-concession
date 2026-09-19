@@ -101,7 +101,97 @@ def test_auth_login():
     assert "access_token" in res.json()
     print("[PASS] Student registration passed")
 
+    # 9. Admin Real-Time Database Statistics
+    res = client.get("/api/admin/stats", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    stats = res.json()
+    assert "total_applications" in stats
+    assert "pending_applications" in stats
+    assert "approved_applications" in stats
+    assert "rejected_applications" in stats
+    assert "active_passes" in stats
+    assert "total_students" in stats
+    assert stats["total_applications"] >= 3
+    print(f"[PASS] Admin stats retrieved (Total: {stats['total_applications']}, Pending: {stats['pending_applications']}, Active Passes: {stats['active_passes']})")
+
+    # 10. Admin Search and Filter
+    # Search by student name "Ananya"
+    res = client.get("/api/admin/applications?search=Ananya", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    search_results = res.json()
+    assert len(search_results) > 0
+    assert any("Ananya" in app["student"]["full_name"] for app in search_results)
+    print("[PASS] Admin search by student name passed")
+
+    # Filter by PENDING
+    res = client.get("/api/admin/applications?status_filter=PENDING", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    pending_results = res.json()
+    assert all(app["status"] == "PENDING" for app in pending_results)
+    print(f"[PASS] Admin status filter (PENDING) passed: found {len(pending_results)} records")
+
+    # 11. Student Application Submission Flow
+    res = client.post("/api/applications", json={
+        "route_id": 1,
+        "academic_year": "2024–2027",
+        "transport_mode": "Combined Intermodal",
+        "starting_point": "Thrissur Central Stand",
+        "destination": "Ernakulam South",
+        "corridor": "NH 544 Corridor",
+        "student_id_doc_name": "student_cce_id.pdf",
+        "bonafide_doc_name": "bonafide_certificate.pdf"
+    }, headers={"Authorization": f"Bearer {student_token}"})
+    assert res.status_code == 201
+    new_app = res.json()
+    assert new_app["status"] == "PENDING"
+    assert new_app["application_number"].startswith("APP-")
+    new_app_id = new_app["id"]
+    print(f"[PASS] Student created application #{new_app['application_number']}")
+
+    # 12. Rejection with validation: blank reason should fail (400)
+    res = client.post(f"/api/admin/applications/{new_app_id}/reject", json={
+        "action": "REJECT",
+        "rejection_reason": ""
+    }, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 400
+    print("[PASS] Rejection without reason correctly rejected (HTTP 400 Bad Request)")
+
+    # 13. Rejection with valid reason
+    res = client.post(f"/api/admin/applications/{new_app_id}/reject", json={
+        "action": "REJECT",
+        "rejection_reason": "Distance from residence is within walkable campus perimeter (<1.5km)."
+    }, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    rejected_app = res.json()
+    assert rejected_app["status"] == "REJECTED"
+    assert "walkable campus perimeter" in rejected_app["rejection_reason"]
+    print(f"[PASS] Application successfully rejected with reason stored: {rejected_app['rejection_reason']}")
+
+    # 14. Approval workflow: approve Ananya's pending application (or create fresh app to approve)
+    res = client.post("/api/applications", json={
+        "route_id": 1,
+        "academic_year": "2024–2027",
+        "transport_mode": "Bus",
+        "starting_point": "Aluva Stand",
+        "destination": "MG Road",
+        "corridor": "Kochi Metro Corridor"
+    }, headers={"Authorization": f"Bearer {student_token}"})
+    assert res.status_code == 201
+    app_to_approve = res.json()
+    app_to_approve_id = app_to_approve["id"]
+
+    res = client.post(f"/api/admin/applications/{app_to_approve_id}/approve", json={
+        "action": "APPROVE",
+        "reviewer_notes": "Verified against Kerala Higher Education Department Registry"
+    }, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    approved_app = res.json()
+    assert approved_app["status"] == "APPROVED"
+    assert approved_app["issued_pass"] is not None
+    assert approved_app["issued_pass"]["status"] == "ACTIVE"
+    print(f"[PASS] Application approved and Digital Pass ({approved_app['issued_pass']['pass_number']}) activated")
+
 if __name__ == "__main__":
     test_health()
     test_auth_login()
-    print("\nALL BACKEND API & SECURITY TESTS PASSED SUCCESSFULLY!")
+    print("\nALL BACKEND API, ADMIN WORKFLOW & SECURITY TESTS PASSED SUCCESSFULLY!")

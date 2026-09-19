@@ -40,7 +40,11 @@ class StudentOut(BaseModel):
     user_id: int
     full_name: str
     roll_number: str
+    student_id_number: Optional[str] = "STU-2024-8841"
+    institution_name: Optional[str] = None
+    institution_type: Optional[str] = "College"
     course: str
+    semester: Optional[str] = "Semester 5"
     year_semester: str
     phone: str
     age: str
@@ -108,43 +112,12 @@ class DocumentOut(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Application Schemas ---
-class ApplicationCreate(BaseModel):
-    route_id: int
-    academic_year: str = "2024–2027"
-    starting_point: Optional[str] = None
-    destination: Optional[str] = None
-    corridor: Optional[str] = None
-    photo_url: Optional[str] = None
-    student_id_doc_name: Optional[str] = "student_college_id.pdf"
-
-class ApplicationOut(BaseModel):
-    id: int
-    application_number: str
-    student_id: int
-    route_id: int
-    academic_year: str
-    status: str
-    applied_at: datetime.datetime
-    reviewed_at: Optional[datetime.datetime] = None
-    reviewer_notes: Optional[str] = None
-    student: Optional[StudentOut] = None
-    route: Optional[RouteOut] = None
-    documents: List[DocumentOut] = []
-
-    class Config:
-        from_attributes = True
-
-class ApplicationReviewRequest(BaseModel):
-    action: str = Field(..., description="'APPROVE' or 'REJECT'")
-    reviewer_notes: Optional[str] = None
-
 # --- Pass Schemas ---
 class PassOut(BaseModel):
     id: int
     pass_number: str
     student_id: int
-    route_id: int
+    route_id: Optional[int] = None
     issue_date: str
     expiry_date: str
     status: str
@@ -157,6 +130,62 @@ class PassOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- Application Schemas ---
+class ApplicationCreate(BaseModel):
+    route_id: Optional[int] = 1
+    academic_year: str = "2024–2027"
+    transport_mode: Optional[str] = "Bus"
+    starting_point: Optional[str] = None
+    destination: Optional[str] = None
+    corridor: Optional[str] = None
+    validity_start: Optional[str] = "01 / 06 / 2026"
+    validity_end: Optional[str] = "31 / 03 / 2027"
+    photo_url: Optional[str] = None
+    student_id_doc_name: Optional[str] = "student_college_id.pdf"
+    bonafide_doc_name: Optional[str] = "bonafide_certificate.pdf"
+    supporting_doc_name: Optional[str] = None
+
+class ApplicationOut(BaseModel):
+    id: int
+    application_number: str
+    student_id: int
+    route_id: Optional[int] = None
+    transport_mode: Optional[str] = "Bus"
+    starting_point: Optional[str] = None
+    destination: Optional[str] = None
+    route_name: Optional[str] = None
+    validity_start: Optional[str] = None
+    validity_end: Optional[str] = None
+    academic_year: str
+    status: str
+    applied_at: datetime.datetime
+    reviewed_at: Optional[datetime.datetime] = None
+    reviewer_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    reviewer_name: Optional[str] = None
+    student: Optional[StudentOut] = None
+    route: Optional[RouteOut] = None
+    documents: List[DocumentOut] = []
+    issued_pass: Optional[PassOut] = None
+
+    class Config:
+        from_attributes = True
+
+class ApplicationReviewRequest(BaseModel):
+    action: Optional[str] = Field("APPROVE", description="'APPROVE' or 'REJECT'")
+    reviewer_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
+
+# --- Admin Statistics Schemas ---
+class AdminStatsOut(BaseModel):
+    total_applications: int
+    pending_applications: int
+    approved_applications: int
+    rejected_applications: int
+    active_passes: int
+    expired_passes: int
+    total_students: int
 
 # --- QR & Token Schemas ---
 class QRGenerateRequest(BaseModel):

@@ -209,11 +209,18 @@ export const api = {
 
   // Admin Protected Operations
   admin: {
-    async listApplications(statusFilter = null) {
-      let url = `${API_BASE}/admin/applications`;
-      if (statusFilter) {
-        url += `?status_filter=${encodeURIComponent(statusFilter)}`;
-      }
+    async getStats() {
+      const res = await fetch(`${API_BASE}/admin/stats`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async listApplications(search = null, statusFilter = null) {
+      const params = new URLSearchParams();
+      if (search && search.trim()) params.append('search', search.trim());
+      if (statusFilter && statusFilter.trim()) params.append('status_filter', statusFilter.trim());
+      const qs = params.toString();
+      const url = `${API_BASE}/admin/applications${qs ? `?${qs}` : ''}`;
       const res = await fetch(url, {
         headers: getAuthHeaders(),
       });
@@ -225,7 +232,7 @@ export const api = {
       });
       return handleResponse(res);
     },
-    async approveApplication(id, notes = 'Verified by Institution Authority') {
+    async approveApplication(id, notes = 'Verified and approved by Administrative Officer') {
       const res = await fetch(`${API_BASE}/admin/applications/${id}/approve`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -233,11 +240,15 @@ export const api = {
       });
       return handleResponse(res);
     },
-    async rejectApplication(id, notes = 'Institutional or distance criteria mismatch') {
+    async rejectApplication(id, rejectionReason) {
       const res = await fetch(`${API_BASE}/admin/applications/${id}/reject`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ action: 'REJECT', reviewer_notes: notes }),
+        body: JSON.stringify({
+          action: 'REJECT',
+          rejection_reason: rejectionReason,
+          reviewer_notes: rejectionReason,
+        }),
       });
       return handleResponse(res);
     },

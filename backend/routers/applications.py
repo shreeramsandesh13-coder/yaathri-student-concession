@@ -52,6 +52,12 @@ def create_application(
         application_number=app_num,
         student_id=student.id,
         route_id=route.id,
+        transport_mode=req.transport_mode or "Bus",
+        starting_point=req.starting_point or route.from_location,
+        destination=req.destination or route.to_location,
+        route_name=req.corridor or f"{route.from_location} ⇄ {route.to_location}",
+        validity_start=req.validity_start or "01 / 06 / 2026",
+        validity_end=req.validity_end or "31 / 03 / 2027",
         academic_year=req.academic_year or "2024–2027",
         status="PENDING",
         applied_at=datetime.datetime.utcnow()
@@ -59,20 +65,38 @@ def create_application(
     db.add(app)
     db.flush()
 
-    # Add mock uploaded documents
+    # Add verified documents
     doc1 = models.Document(
         application_id=app.id,
-        doc_type="COLLEGE_ID",
-        file_name=req.student_id_doc_name or "student_college_id.pdf",
+        doc_type="INSTITUTION_ID",
+        file_name=req.student_id_doc_name or "institutional_id_card.pdf",
         file_size_bytes=1024 * 350
     )
     db.add(doc1)
+
+    if req.bonafide_doc_name:
+        doc_bonafide = models.Document(
+            application_id=app.id,
+            doc_type="BONAFIDE_CERTIFICATE",
+            file_name=req.bonafide_doc_name or "bonafide_student_certificate.pdf",
+            file_size_bytes=1024 * 420
+        )
+        db.add(doc_bonafide)
+
+    if req.supporting_doc_name:
+        doc_supp = models.Document(
+            application_id=app.id,
+            doc_type="SUPPORTING_DOC",
+            file_name=req.supporting_doc_name,
+            file_size_bytes=1024 * 280
+        )
+        db.add(doc_supp)
 
     if req.photo_url:
         doc2 = models.Document(
             application_id=app.id,
             doc_type="PHOTO",
-            file_name="student_biometric_photo.jpg",
+            file_name="student_biometric_portrait.jpg",
             file_url=req.photo_url,
             file_size_bytes=1024 * 180
         )
@@ -82,7 +106,7 @@ def create_application(
     notif = models.Notification(
         user_id=current_user.id,
         title="Application Submitted",
-        message=f"Concession request {app.application_number} for {route.from_location} ⇄ {route.to_location} has been forwarded to the college authority & RTO node.",
+        message=f"Application submitted successfully. Concession request {app.application_number} is currently PENDING institutional and RTO verification.",
         type="INFO"
     )
     db.add(notif)

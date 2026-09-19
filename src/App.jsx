@@ -16,6 +16,7 @@ import RenewModal from './components/RenewModal';
 import AuthModal from './components/AuthModal';
 import SplashScreen from './components/SplashScreen';
 import { initialStudentData, initialTimeline } from './data/student';
+import { api } from './services/api';
 
 function MainApp() {
   const { user, student, isAdmin } = useAuth();
@@ -34,30 +35,129 @@ function MainApp() {
   const [studentData, setStudentData] = useState(initialStudentData);
   const [timeline, setTimeline] = useState(initialTimeline);
 
-  // Sync with live backend student profile when authenticated
+  // Sync with live backend student profile and application status when authenticated
   useEffect(() => {
-    if (student) {
+    async function syncStudentData() {
+      if (!student) return;
+
+      const baseName = student.full_name || `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student';
+      let currentStatus = 'ACTIVE';
+      let passNum = 'SCP-2026-00124';
+      let validDate = '31 MAR 2027';
+      let rejectionReason = null;
+      let appNumber = 'APP-2026-00124';
+
+      try {
+        const apps = await api.applications.list();
+        if (apps && apps.length > 0) {
+          const latestApp = apps[0];
+          currentStatus = latestApp.status;
+          appNumber = latestApp.application_number;
+          rejectionReason = latestApp.rejection_reason || latestApp.reviewer_notes;
+          if (latestApp.issued_pass) {
+            passNum = latestApp.issued_pass.pass_number;
+            validDate = latestApp.issued_pass.expiry_date || validDate;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load student applications list:', e);
+      }
+
       setStudentData((prev) => ({
         ...prev,
         id: student.id,
-        passId: student.active_pass?.id || prev.passId || 1,
-        name: `${student.first_name} ${student.last_name}`,
+        name: baseName,
         rollNo: student.roll_number || prev.rollNo,
-        college: student.institution?.name || prev.college,
+        college: student.institution_name || student.college_address || student.institution?.name || prev.college,
         course: student.course || prev.course,
+        year: student.semester || student.year_semester || prev.year,
         bloodGroup: student.blood_group || prev.bloodGroup,
         photoUrl: student.photo_url || prev.photoUrl,
-        passNumber: student.active_pass?.pass_number || prev.passNumber,
-        validUntil: student.active_pass?.valid_until
-          ? new Date(student.active_pass.valid_until).toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            }).toUpperCase()
-          : prev.validUntil,
-        status: student.active_pass ? student.active_pass.status : prev.status,
+        passNumber: passNum,
+        validUntil: validDate,
+        status: currentStatus,
+        applicationId: appNumber,
+        rejectionReason: rejectionReason,
       }));
+
+      // Dynamically sync timeline based on real application status
+      if (currentStatus === 'PENDING') {
+        setTimeline([
+          {
+            step: 1,
+            title: "Application Submitted",
+            date: "RECENTLY",
+            description: `Application ${appNumber} received by RTO Kerala node.`,
+            completed: true,
+            active: false
+          },
+          {
+            step: 2,
+            title: "Institutional & RTO Audit",
+            date: "IN PROGRESS",
+            description: "Awaiting administrative officer document endorsement.",
+            completed: false,
+            active: true
+          },
+          {
+            step: 3,
+            title: "Corridor Allocation",
+            date: "PENDING",
+            description: "Route fare subsidy validation.",
+            completed: false,
+            active: false
+          },
+          {
+            step: 4,
+            title: "Digital Pass Issuance",
+            date: "PENDING",
+            description: "NFC digital credential generation.",
+            completed: false,
+            active: false
+          }
+        ]);
+      } else if (currentStatus === 'REJECTED') {
+        setTimeline([
+          {
+            step: 1,
+            title: "Application Submitted",
+            date: "RECENTLY",
+            description: `Application ${appNumber} was submitted.`,
+            completed: true,
+            active: false
+          },
+          {
+            step: 2,
+            title: "Application Rejected",
+            date: "ATTENTION REQUIRED",
+            description: rejectionReason ? `Reason: ${rejectionReason}` : "Eligibility criteria mismatch.",
+            completed: false,
+            active: true,
+            isError: true
+          },
+          {
+            step: 3,
+            title: "Corridor Allocation",
+            date: "SUSPENDED",
+            description: "Route allocation cancelled.",
+            completed: false,
+            active: false
+          },
+          {
+            step: 4,
+            title: "Digital Pass Inactive",
+            date: "SUSPENDED",
+            description: "Pass not generated.",
+            completed: false,
+            active: false
+          }
+        ]);
+      } else {
+        setTimeline(initialTimeline);
+      }
     }
+
+    syncStudentData();
   }, [student]);
 
   const handleSplashComplete = () => {
