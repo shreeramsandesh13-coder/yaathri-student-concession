@@ -10,25 +10,48 @@ import { useAuth } from '../context/AuthContext';
  * - Dynamic Admin Desk tab and RBAC identity switcher
  */
 export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAuth, studentData }) {
-  const { user, isAdmin, isAuthenticated, logout } = useAuth();
+  const { user, role, isInstitution, isVerifier, isRto, isStudent, isAuthenticated, logout } = useAuth();
 
-  const navItems = isAdmin
-    ? [
-        { id: 'admin', label: 'Admin Dashboard', icon: 'admin_panel_settings' },
-        { id: 'verify', label: 'QR Scanner', icon: 'qr_code_scanner' },
-      ]
-    : [
-        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-        { id: 'pass', label: 'My Pass', icon: 'credit_card' },
-        { id: 'apply', label: 'Apply', icon: 'app_registration', action: onOpenApply },
-        { id: 'verify', label: 'Verify', icon: 'verified' },
-        { id: 'history', label: 'History', icon: 'history' },
-      ];
+  let navItems = [];
+  if (isVerifier) {
+    navItems = [
+      { id: 'verifier', label: 'Conductor Terminal', icon: 'qr_code_scanner' },
+      { id: 'portals', label: 'Switch Portal', icon: 'swap_horiz' },
+    ];
+  } else if (isRto) {
+    navItems = [
+      { id: 'rto', label: 'RTO Authority', icon: 'shield' },
+      { id: 'portals', label: 'Switch Portal', icon: 'swap_horiz' },
+    ];
+  } else if (isInstitution) {
+    navItems = [
+      { id: 'admin', label: 'Institution Desk', icon: 'admin_panel_settings' },
+      { id: 'portals', label: 'Switch Portal', icon: 'swap_horiz' },
+    ];
+  } else {
+    // Student or Public Guest
+    navItems = [
+      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { id: 'pass', label: 'My Pass', icon: 'credit_card' },
+      { id: 'apply', label: 'Apply', icon: 'app_registration', action: onOpenApply },
+      { id: 'history', label: 'History', icon: 'history' },
+      { id: 'portals', label: 'Portals', icon: 'hub' },
+    ];
+  }
 
   const handleLogout = async () => {
     await logout();
     setActiveTab('dashboard');
   };
+
+  const getRoleBadge = () => {
+    if (isVerifier) return { icon: '🚌', label: 'Conductor Terminal', role: 'VERIFIER', color: 'text-amber-500' };
+    if (isRto) return { icon: '🏛️', label: 'Kerala RTO Authority', role: 'RTO', color: 'text-sky-400' };
+    if (isInstitution) return { icon: '🏫', label: 'Institution Desk', role: 'INSTITUTION', color: 'text-indigo-400' };
+    return { icon: '🎓', label: studentData?.name || user?.email?.split('@')[0] || 'Student', role: 'STUDENT', color: 'text-emerald-400' };
+  };
+
+  const badge = getRoleBadge();
 
   return (
     <>
@@ -37,7 +60,12 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Official YAATHRI Logo & Identity */}
           <button
-            onClick={() => setActiveTab(isAdmin ? 'admin' : 'dashboard')}
+            onClick={() => {
+              if (isVerifier) setActiveTab('verifier');
+              else if (isRto) setActiveTab('rto');
+              else if (isInstitution) setActiveTab('admin');
+              else setActiveTab('dashboard');
+            }}
             className="flex items-center space-x-3 text-left group cursor-pointer focus:outline-none"
           >
             <YaathriLogo variant="full" />
@@ -72,11 +100,11 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
 
           {/* Trailing Actions: RBAC Status, QR Badge, ThemeToggle, Auth */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* QR Verification Status Indicator */}
+            {/* Active Portal Badge */}
             <div className="hidden lg:flex items-center space-x-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-900/90 rounded-full border border-slate-200 dark:border-slate-800">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-label-caps font-label-caps text-emerald-700 dark:text-emerald-400 tracking-wider">
-                QR VERIFIED
+              <span className="text-label-caps font-label-caps text-slate-700 dark:text-slate-300 tracking-wider">
+                {badge.role}
               </span>
             </div>
 
@@ -92,18 +120,14 @@ export default function Navbar({ activeTab, setActiveTab, onOpenApply, onOpenAut
                   title="Switch Account / Manage Access"
                 >
                   <div className="w-7 h-7 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-300 font-bold flex items-center justify-center text-xs">
-                    {isAdmin ? '🛡️' : '🎓'}
+                    {badge.icon}
                   </div>
                   <div className="hidden sm:flex flex-col pr-1">
-                    <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[100px]">
-                      {isAdmin ? 'Kerala RTO Desk' : studentData?.name || user?.email?.split('@')[0]}
+                    <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-[110px]">
+                      {badge.label}
                     </span>
-                    <span
-                      className={`text-[9px] font-bold tracking-wider uppercase font-mono ${
-                        isAdmin ? 'text-amber-600 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'
-                      }`}
-                    >
-                      {user?.role}
+                    <span className={`text-[9px] font-bold tracking-wider uppercase font-mono ${badge.color}`}>
+                      {badge.role}
                     </span>
                   </div>
                 </button>

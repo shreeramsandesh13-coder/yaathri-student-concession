@@ -336,7 +336,149 @@ def test_auth_login():
     assert len(shreeram_logs) > 0
     print(f"[PASS] Admin verification search passed: found {len(shreeram_logs)} records for 'Shreeram'")
 
+def test_four_portals_and_verifier_rto():
+    print("\n--- Testing 4-Portal Roles: Institution, Verifier & RTO ---")
+
+    # 1. Institution Login & Application Access
+    res = client.post("/api/auth/login", json={
+        "email": "institution@yaathri.kerala.gov.in",
+        "password": "Institution@123"
+    })
+    assert res.status_code == 200
+    inst_data = res.json()
+    assert inst_data["user"]["role"] == "INSTITUTION"
+    inst_token = inst_data["access_token"]
+    print("[PASS] Institution login succeeded")
+
+    # Institution accesses application review
+    res = client.get("/api/admin/applications", headers={"Authorization": f"Bearer {inst_token}"})
+    assert res.status_code == 200
+    print("[PASS] Institution portal access to student applications verified")
+
+    # 2. Conductor / Verifier Login (KSRTC)
+    res = client.post("/api/auth/login", json={
+        "email": "verifier.ksrtc@yaathri.kerala.gov.in",
+        "password": "Verifier@123"
+    })
+    assert res.status_code == 200
+    v_data = res.json()
+    assert v_data["user"]["role"] == "VERIFIER"
+    v_token = v_data["access_token"]
+    print("[PASS] KSRTC Verifier login succeeded")
+
+    # Verifier profile
+    res = client.get("/api/verifier/profile", headers={"Authorization": f"Bearer {v_token}"})
+    assert res.status_code == 200
+    v_prof = res.json()
+    assert v_prof["verifier_code"] == "KSRTC-V1024"
+    assert v_prof["transport_type"] == "KSRTC"
+    assert v_prof["bus_number"] == "KL-15-A-1234"
+    print(f"[PASS] Verifier profile verified: {v_prof['full_name']} ({v_prof['verifier_code']})")
+
+    # Conductor verifies valid student pass
+    res = client.post("/api/verifier/verify", json={
+        "qr_payload": "SCP-2026-00124"
+    }, headers={"Authorization": f"Bearer {v_token}"})
+    assert res.status_code == 200
+    scan_res = res.json()
+    assert scan_res["is_valid"] == True
+    assert scan_res["result"] == "VALID"
+    assert scan_res["student_name"] == "Shreeram Sandesh"
+    assert scan_res["verifier_code"] == "KSRTC-V1024"
+    assert scan_res["transport_type"] == "KSRTC"
+    print(f"[PASS] Conductor verification succeeded: VALID pass for {scan_res['student_name']}")
+
+    # Conductor verifies invalid code
+    res = client.post("/api/verifier/verify", json={
+        "qr_payload": "FAKE-PASS-CODE-000"
+    }, headers={"Authorization": f"Bearer {v_token}"})
+    assert res.status_code == 200
+    bad_res = res.json()
+    assert bad_res["is_valid"] == False
+    assert bad_res["result"] == "INVALID"
+    assert "UNRECOGNIZED" in bad_res["failure_reason"]
+    print("[PASS] Conductor verification correctly rejected invalid QR code")
+
+    # Verifier history
+    res = client.get("/api/verifier/history", headers={"Authorization": f"Bearer {v_token}"})
+    assert res.status_code == 200
+    v_history = res.json()
+    assert len(v_history) > 0
+    print(f"[PASS] Verifier retrieved {len(v_history)} personal scans")
+
+    # Suspended verifier rejection check
+    res = client.post("/api/auth/login", json={
+        "email": "verifier.suspended@yaathri.kerala.gov.in",
+        "password": "Verifier@123"
+    })
+    # User is suspended (is_active=False)
+    assert res.status_code == 403
+    print("[PASS] Suspended verifier account login rejected (403 Forbidden)")
+
+    # 3. RTO / Transport Authority Login
+    res = client.post("/api/auth/login", json={
+        "email": "rto@yaathri.kerala.gov.in",
+        "password": "Rto@123"
+    })
+    assert res.status_code == 200
+    rto_data = res.json()
+    assert rto_data["user"]["role"] == "RTO"
+    rto_token = rto_data["access_token"]
+    print("[PASS] RTO login succeeded")
+
+    # RTO Dashboard KPIs
+    res = client.get("/api/rto/dashboard", headers={"Authorization": f"Bearer {rto_token}"})
+    assert res.status_code == 200
+    rto_dash = res.json()
+    assert rto_dash["total_verifiers"] >= 3
+    assert rto_dash["total_verifications"] > 0
+    assert "KSRTC" in rto_dash["transport_breakdown"]
+    print(f"[PASS] RTO Dashboard KPI stats verified: {rto_dash['total_verifiers']} verifiers, {rto_dash['total_verifications']} verifications")
+
+    # RTO Verifiers List
+    res = client.get("/api/rto/verifiers", headers={"Authorization": f"Bearer {rto_token}"})
+    assert res.status_code == 200
+    verifiers_list = res.json()
+    assert len(verifiers_list) >= 3
+    print(f"[PASS] RTO Verifiers list fetched: {len(verifiers_list)} authorized verifiers")
+
+    # RTO Toggle Verifier Status (Suspend / Activate)
+    target_v = verifiers_list[0]
+    target_id = target_v["id"]
+    curr_status = target_v["status"]
+    new_test_status = "SUSPENDED" if curr_status == "ACTIVE" else "ACTIVE"
+    
+    res = client.patch(f"/api/rto/verifiers/{target_id}/status", json={
+        "status": new_test_status
+    }, headers={"Authorization": f"Bearer {rto_token}"})
+    assert res.status_code == 200
+    assert res.json()["status"] == new_test_status
+    print(f"[PASS] RTO successfully changed verifier {target_id} status to {new_test_status}")
+
+    # Revert status back
+    res = client.patch(f"/api/rto/verifiers/{target_id}/status", json={
+        "status": curr_status
+    }, headers={"Authorization": f"Bearer {rto_token}"})
+    assert res.status_code == 200
+    assert res.json()["status"] == curr_status
+    print(f"[PASS] RTO restored verifier {target_id} status back to {curr_status}")
+
+    # RTO State-Wide Verification Audit Ledger
+    res = client.get("/api/rto/verifications", headers={"Authorization": f"Bearer {rto_token}"})
+    assert res.status_code == 200
+    rto_audit = res.json()
+    assert len(rto_audit) > 0
+    print(f"[PASS] RTO state-wide audit ledger retrieved: {len(rto_audit)} logs")
+
+    # RTO Operators List
+    res = client.get("/api/rto/operators", headers={"Authorization": f"Bearer {rto_token}"})
+    assert res.status_code == 200
+    operators = res.json()
+    assert len(operators) >= 3
+    print(f"[PASS] RTO transport operators list: {len(operators)} operators (KSRTC, Private Bus, Metro)")
+
 if __name__ == "__main__":
     test_health()
     test_auth_login()
-    print("\nALL 19 BACKEND API, DIGITAL PASS, QR AUDIT & SECURITY TESTS PASSED SUCCESSFULLY!")
+    test_four_portals_and_verifier_rto()
+    print("\nALL BACKEND API, DIGITAL PASS, QR AUDIT & 4-PORTAL TESTS PASSED SUCCESSFULLY!")

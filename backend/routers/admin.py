@@ -10,7 +10,7 @@ import models
 import schemas
 from auth import require_role
 
-router = APIRouter(prefix="/admin", tags=["Admin Operations"], dependencies=[Depends(require_role(["ADMIN"]))])
+router = APIRouter(prefix="/admin", tags=["Admin Operations"], dependencies=[Depends(require_role(["ADMIN", "INSTITUTION"]))])
 
 @router.get("/stats", response_model=schemas.AdminStatsOut)
 def get_admin_stats(db: Session = Depends(get_db)):

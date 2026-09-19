@@ -297,5 +297,88 @@ export const api = {
       return handleResponse(res);
     },
   },
+
+  // Transport Verifier (Conductor / Gate Attendant)
+  verifier: {
+    async getProfile() {
+      const res = await fetch(`${API_BASE}/verifier/profile`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async verifyPass(qrPayload) {
+      const res = await fetch(`${API_BASE}/verifier/verify`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ qr_payload: qrPayload }),
+      });
+      return handleResponse(res);
+    },
+    async getHistory() {
+      const res = await fetch(`${API_BASE}/verifier/history`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+  },
+
+  // RTO / Transport Authority
+  rto: {
+    async getDashboard() {
+      const res = await fetch(`${API_BASE}/rto/dashboard`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async listVerifiers(params = {}) {
+      const searchParams = new URLSearchParams();
+      if (params.transport_type) searchParams.append('transport_type', params.transport_type);
+      if (params.status_filter) searchParams.append('status_filter', params.status_filter);
+      if (params.search) searchParams.append('search', params.search);
+      const qs = searchParams.toString();
+      const res = await fetch(`${API_BASE}/rto/verifiers${qs ? `?${qs}` : ''}`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async updateVerifierStatus(verifierId, status) {
+      const res = await fetch(`${API_BASE}/rto/verifiers/${verifierId}/status`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+      });
+      return handleResponse(res);
+    },
+    async listVerifications(params = {}) {
+      const searchParams = new URLSearchParams();
+      if (params.search) searchParams.append('search', params.search);
+      if (params.transport_type) searchParams.append('transport_type', params.transport_type);
+      if (params.result) searchParams.append('result', params.result);
+      if (params.limit) searchParams.append('limit', params.limit);
+      const qs = searchParams.toString();
+      const res = await fetch(`${API_BASE}/rto/verifications${qs ? `?${qs}` : ''}`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async listOperators() {
+      const res = await fetch(`${API_BASE}/rto/operators`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async listInstitutions() {
+      const res = await fetch(`${API_BASE}/rto/institutions`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+    async listRoutes() {
+      const res = await fetch(`${API_BASE}/rto/routes`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(res);
+    },
+  },
 };
 

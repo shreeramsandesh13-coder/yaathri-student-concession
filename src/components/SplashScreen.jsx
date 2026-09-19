@@ -43,6 +43,8 @@ export default function SplashScreen({ onComplete }) {
     }, fadeDuration);
   };
 
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+
   useEffect(() => {
     // Check prefers-reduced-motion
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -68,14 +70,9 @@ export default function SplashScreen({ onComplete }) {
 
     // Auto-play video with muted playback guarantee
     if (videoRef.current) {
+      videoRef.current.muted = true;
       videoRef.current.play().catch(() => {
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          videoRef.current.play().catch(() => {
-            // If browser blocks playback completely, exit cleanly so user isn't stuck
-            handleTransitionOut();
-          });
-        }
+        setAutoplayBlocked(true);
       });
     }
 
@@ -83,6 +80,16 @@ export default function SplashScreen({ onComplete }) {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  const handleManualPlay = () => {
+    setAutoplayBlocked(false);
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {
+        handleTransitionOut();
+      });
+    }
+  };
 
   return (
     <div
@@ -111,11 +118,25 @@ export default function SplashScreen({ onComplete }) {
           aria-label="YAATHRI Opening Animation"
         />
 
+        {/* Fallback Play Button if browser policy blocked silent autoplay */}
+        {autoplayBlocked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-20">
+            <button
+              type="button"
+              onClick={handleManualPlay}
+              className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-2xl flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">play_arrow</span>
+              <span>Play YAATHRI Intro</span>
+            </button>
+          </div>
+        )}
+
         {/* Clean, Modern Skip Button */}
         <button
           type="button"
           onClick={handleTransitionOut}
-          className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-10 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800 text-white/90 hover:text-white border border-white/15 hover:border-white/30 backdrop-blur-md text-xs font-semibold tracking-wider uppercase flex items-center space-x-1.5 shadow-xl transition-all active:scale-95 cursor-pointer"
+          className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800 text-white/90 hover:text-white border border-white/15 hover:border-white/30 backdrop-blur-md text-xs font-semibold tracking-wider uppercase flex items-center space-x-1.5 shadow-xl transition-all active:scale-95 cursor-pointer"
           title="Skip Intro Animation"
         >
           <span>Skip</span>

@@ -10,6 +10,9 @@ import VerifyPass from './components/VerifyPass';
 import PassView from './components/PassView';
 import HistoryView from './components/HistoryView';
 import AdminView from './components/AdminView';
+import VerifierPortal from './components/VerifierPortal';
+import RtoPortal from './components/RtoPortal';
+import PortalSwitcherBanner from './components/PortalSwitcherBanner';
 import Footer from './components/Footer';
 import ApplyPassModal from './components/ApplyPassModal';
 import RenewModal from './components/RenewModal';
@@ -19,33 +22,35 @@ import { initialStudentData, initialTimeline } from './data/student';
 import { api } from './services/api';
 
 function MainApp() {
-  const { user, student, isAdmin, isAuthenticated } = useAuth();
-  const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return !sessionStorage.getItem('yaathri_intro_played');
-    } catch {
-      return false;
-    }
-  });
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'admin' : 'dashboard');
+  const { user, student, isAdmin, isInstitution, isVerifier, isRto, isStudent, isAuthenticated } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [studentData, setStudentData] = useState(() => (isAdmin ? null : initialStudentData));
+  const [studentData, setStudentData] = useState(() => (isAdmin || isVerifier || isRto || isInstitution ? null : initialStudentData));
   const [timeline, setTimeline] = useState(initialTimeline);
 
   // Strict role routing & isolation
   useEffect(() => {
-    if (isAdmin) {
-      // Admin should never see student dashboard or student concession card
+    if (isVerifier) {
       setStudentData(null);
-      if (activeTab !== 'admin' && activeTab !== 'verify') {
+      if (activeTab !== 'verifier' && activeTab !== 'portals') {
+        setActiveTab('verifier');
+      }
+    } else if (isRto) {
+      setStudentData(null);
+      if (activeTab !== 'rto' && activeTab !== 'portals') {
+        setActiveTab('rto');
+      }
+    } else if (isInstitution) {
+      setStudentData(null);
+      if (activeTab !== 'admin' && activeTab !== 'portals') {
         setActiveTab('admin');
       }
     } else {
-      // Student or guest should never see admin view
-      if (activeTab === 'admin') {
+      // Student or guest
+      if (activeTab === 'admin' || activeTab === 'verifier' || activeTab === 'rto') {
         setActiveTab('dashboard');
       }
       if (!isAuthenticated) {
@@ -53,7 +58,7 @@ function MainApp() {
         setTimeline(initialTimeline);
       }
     }
-  }, [isAdmin, activeTab, isAuthenticated]);
+  }, [isVerifier, isRto, isInstitution, isAuthenticated]);
 
   // Sync with live backend student profile and application status when student is authenticated
   useEffect(() => {
@@ -296,17 +301,23 @@ function MainApp() {
 
         {/* Main Canvas Content */}
         <main className="pt-20 sm:pt-24 pb-28 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto space-y-16 lg:space-y-24 flex-1 w-full">
-          {/* STRICT ROLE SEPARATION: ADMIN VIEW */}
-          {isAdmin ? (
-            activeTab === 'verify' ? (
-              <div className="pt-6">
-                <VerifyPass />
-              </div>
-            ) : (
-              <div className="pt-6">
-                <AdminView />
-              </div>
-            )
+          {/* ROLE & TAB ROUTING */}
+          {activeTab === 'portals' ? (
+            <div className="pt-4 space-y-8">
+              <PortalSwitcherBanner onSelectPortal={(tab) => setActiveTab(tab)} />
+            </div>
+          ) : isVerifier || activeTab === 'verifier' ? (
+            <div className="pt-4">
+              <VerifierPortal />
+            </div>
+          ) : isRto || activeTab === 'rto' ? (
+            <div className="pt-4">
+              <RtoPortal />
+            </div>
+          ) : isInstitution || activeTab === 'admin' ? (
+            <div className="pt-4">
+              <AdminView />
+            </div>
           ) : (
             /* STUDENT / VISITOR VIEW */
             <>
@@ -314,17 +325,17 @@ function MainApp() {
                 <>
                   <Hero
                     onOpenApply={handleOpenApply}
-                    onGoVerify={handleGoVerify}
+                    onGoVerify={() => setActiveTab('portals')}
                     studentData={studentData || initialStudentData}
                   />
+                  <PortalSwitcherBanner onSelectPortal={(tab) => setActiveTab(tab)} />
                   <ApplicationTimeline timeline={timeline} studentData={studentData || initialStudentData} />
                   <QuickActions
                     onOpenApply={handleOpenApply}
                     onGoPass={handleGoPass}
-                    onGoVerify={handleGoVerify}
+                    onGoVerify={() => setActiveTab('portals')}
                     onOpenRenew={() => setIsRenewOpen(true)}
                   />
-                  <VerifyPass />
                 </>
               )}
 
@@ -333,12 +344,6 @@ function MainApp() {
                   <PassView studentData={studentData || initialStudentData} />
                   <ApplicationTimeline timeline={timeline} studentData={studentData || initialStudentData} />
                 </>
-              )}
-
-              {activeTab === 'verify' && (
-                <div className="pt-6">
-                  <VerifyPass />
-                </div>
               )}
 
               {activeTab === 'history' && (

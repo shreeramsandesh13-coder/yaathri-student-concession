@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AuthModal({ isOpen, onClose }) {
-  const { login, register, loginAsDemoStudent, loginAsDemoAdmin, authError } = useAuth();
+  const {
+    login,
+    register,
+    loginAsDemoStudent,
+    loginAsDemoInstitution,
+    loginAsDemoVerifier,
+    loginAsDemoRto,
+    loginAsDemoAdmin,
+    authError,
+  } = useAuth();
   const [tab, setTab] = useState('login'); // 'login' | 'register' | 'forgot'
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -74,20 +83,46 @@ export default function AuthModal({ isOpen, onClose }) {
       await loginAsDemoStudent();
       onClose();
     } catch (err) {
-      setErrorMessage('Demo login failed.');
+      setErrorMessage('Student demo login failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickAdmin = async () => {
+  const handleQuickInstitution = async () => {
     setLoading(true);
     setErrorMessage('');
     try {
-      await loginAsDemoAdmin();
+      await loginAsDemoInstitution();
       onClose();
     } catch (err) {
-      setErrorMessage('Admin login failed.');
+      setErrorMessage('Institution demo login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickVerifier = async () => {
+    setLoading(true);
+    setErrorMessage('');
+    try {
+      await loginAsDemoVerifier('ksrtc');
+      onClose();
+    } catch (err) {
+      setErrorMessage('Verifier demo login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickRto = async () => {
+    setLoading(true);
+    setErrorMessage('');
+    try {
+      await loginAsDemoRto();
+      onClose();
+    } catch (err) {
+      setErrorMessage('RTO demo login failed.');
     } finally {
       setLoading(false);
     }
@@ -338,28 +373,55 @@ export default function AuthModal({ isOpen, onClose }) {
 
         {/* QUICK 1-CLICK DEMO AUTH BAR */}
         <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 text-center">
-            Instant Demo Account Quick-Switch
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+            <span>Instant Demo Account Switch</span>
+            <span className="text-amber-500 font-mono">4 Roles</span>
           </div>
+
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={handleQuickStudent}
               disabled={loading}
-              className="px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-800/80 text-sky-800 dark:text-sky-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+              className="px-2.5 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-800/80 text-sky-800 dark:text-sky-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
             >
-              <span>🎓 Student Profile</span>
-              <span className="text-[9.5px] opacity-75 font-mono">Shreeram Sandesh</span>
+              <span>🎓 Student</span>
+              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">Shreeram (Pass)</span>
             </button>
+
             <button
               type="button"
-              onClick={handleQuickAdmin}
+              onClick={handleQuickInstitution}
               disabled={loading}
-              className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+              className="px-2.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
             >
-              <span>🛡️ Admin Portal</span>
-              <span className="text-[9.5px] opacity-75 font-mono">Kerala RTO Desk</span>
+              <span>🏫 Institution</span>
+              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">Christ College Desk</span>
             </button>
+
+            <button
+              type="button"
+              onClick={handleQuickVerifier}
+              disabled={loading}
+              className="px-2.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+            >
+              <span>🚌 Conductor</span>
+              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">KSRTC (Arun Kumar)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleQuickRto}
+              disabled={loading}
+              className="px-2.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-800 dark:text-indigo-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+            >
+              <span>🏛️ RTO Authority</span>
+              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">State Commissioner</span>
+            </button>
+          </div>
+
+          <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center pt-1">
+            Official notice: Conductor &amp; RTO accounts are department-authorized. Only students may register publicly.
           </div>
         </div>
 

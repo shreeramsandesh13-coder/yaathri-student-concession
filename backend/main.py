@@ -10,7 +10,7 @@ from database import engine, Base, upgrade_db_schema
 import models
 
 # Import routers
-from routers import auth, students, applications, passes, routes, qr_tokens, notifications, admin
+from routers import auth, students, applications, passes, routes, qr_tokens, notifications, admin, verifier, rto
 
 # Create database tables automatically
 Base.metadata.create_all(bind=engine)
@@ -40,6 +40,8 @@ app.include_router(routes.router, prefix="/api")
 app.include_router(qr_tokens.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(verifier.router, prefix="/api")
+app.include_router(rto.router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():

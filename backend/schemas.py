@@ -60,9 +60,70 @@ class StudentOut(BaseModel):
     class Config:
         from_attributes = True
 
+class InstitutionOut(BaseModel):
+    id: int
+    name: str
+    code: str
+    address: str
+    district: str
+    principal_name: str
+    contact_phone: Optional[str] = None
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class TransportOperatorOut(BaseModel):
+    id: int
+    name: str
+    code: str
+    operator_type: str
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    headquarters: Optional[str] = None
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class VehicleOut(BaseModel):
+    id: int
+    operator_id: int
+    vehicle_type: str
+    vehicle_number: Optional[str] = None
+    device_id: Optional[str] = None
+    station_name: Optional[str] = None
+    depot: Optional[str] = None
+    assigned_route: Optional[str] = None
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class VerifierOut(BaseModel):
+    id: int
+    user_id: int
+    verifier_code: str
+    full_name: str
+    transport_type: str
+    operator_name: str
+    bus_number: Optional[str] = None
+    assigned_route: Optional[str] = None
+    depot: Optional[str] = None
+    station_device_id: Optional[str] = None
+    station_name: Optional[str] = None
+    phone: Optional[str] = None
+    status: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
 class UserMeResponse(BaseModel):
     user: UserOut
     student: Optional[StudentOut] = None
+    institution: Optional[InstitutionOut] = None
+    verifier: Optional[VerifierOut] = None
 
 # --- Route & Stop Schemas ---
 class StopOut(BaseModel):
@@ -268,6 +329,14 @@ class VerificationLogOut(BaseModel):
     student_roll: Optional[str] = None
     route_name: Optional[str] = None
     verifier_identity: Optional[str] = None
+    verifier_id: Optional[int] = None
+    verifier_code: Optional[str] = None
+    verifier_name: Optional[str] = None
+    transport_type: Optional[str] = None
+    transport_operator: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    station_device_id: Optional[str] = None
+    result: Optional[str] = None
     status: str
     status_code: str
     failure_reason: Optional[str] = None
@@ -276,6 +345,52 @@ class VerificationLogOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- Verifier Specific Schemas ---
+class VerifierStatusUpdate(BaseModel):
+    status: str  # "ACTIVE" or "SUSPENDED"
+
+class VerifierVerifyRequest(BaseModel):
+    qr_payload: str
+
+class VerifierVerifyResponse(BaseModel):
+    is_valid: bool
+    result: str  # "VALID" or "INVALID"
+    status_code: str
+    pass_number: Optional[str] = None
+    student_name: Optional[str] = None
+    student_photo: Optional[str] = None
+    roll_number: Optional[str] = None
+    institution: Optional[str] = None
+    class_name: Optional[str] = None
+    assigned_route: Optional[str] = None
+    transport_mode: Optional[str] = None
+    valid_from: Optional[str] = None
+    valid_until: Optional[str] = None
+    subsidy_rate: Optional[str] = None
+    failure_reason: Optional[str] = None
+    message: str
+    verified_at: datetime.datetime
+    # Server-stamped verifier context
+    verifier_code: str
+    verifier_name: str
+    transport_type: str
+    transport_operator: Optional[str] = None
+    vehicle_or_station: Optional[str] = None
+
+# --- RTO Oversight Schemas ---
+class RtoDashboardOut(BaseModel):
+    total_verifiers: int
+    active_verifiers: int
+    suspended_verifiers: int
+    total_verifications: int
+    today_verifications: int
+    valid_verifications: int
+    invalid_verifications: int
+    total_institutions: int
+    total_active_passes: int
+    total_operators: int
+    transport_breakdown: dict = {}
 
 # --- Notification Schemas ---
 class NotificationOut(BaseModel):

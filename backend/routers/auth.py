@@ -95,9 +95,17 @@ def get_me(current_user: models.User = Depends(get_current_user)):
     student_data = None
     if current_user.student_profile is not None:
         student_data = schemas.StudentOut.model_validate(current_user.student_profile)
+    institution_data = None
+    if current_user.institution_profile is not None:
+        institution_data = schemas.InstitutionOut.model_validate(current_user.institution_profile)
+    verifier_data = None
+    if current_user.verifier_profile is not None:
+        verifier_data = schemas.VerifierOut.model_validate(current_user.verifier_profile)
     return schemas.UserMeResponse(
         user=schemas.UserOut.model_validate(current_user),
-        student=student_data
+        student=student_data,
+        institution=institution_data,
+        verifier=verifier_data
     )
 
 @router.post("/forgot-password")

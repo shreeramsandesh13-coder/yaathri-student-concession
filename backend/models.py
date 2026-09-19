@@ -16,12 +16,15 @@ class User(Base):
 
     # Relationships
     student_profile = relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    verifier_profile = relationship("Verifier", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    institution_profile = relationship("Institution", back_populates="user", uselist=False)
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 class Institution(Base):
     __tablename__ = "institutions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     address: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -31,6 +34,7 @@ class Institution(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships
+    user = relationship("User", back_populates="institution_profile")
     students = relationship("Student", back_populates="institution")
 
 class Student(Base):
@@ -204,6 +208,68 @@ class TravelToken(Base):
     # Relationships
     pass_obj = relationship("Pass", back_populates="travel_tokens")
 
+class TransportOperator(Base):
+    __tablename__ = "transport_operators"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)  # "Kerala State Road Transport Corporation", "ABC Travels", "Kochi Metro Rail Limited"
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)  # "KSRTC", "ABC-TRV", "KMRL"
+    operator_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "KSRTC", "PRIVATE_BUS", "METRO"
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    contact_email: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    headquarters: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    vehicles = relationship("Vehicle", back_populates="operator", cascade="all, delete-orphan")
+    verifiers = relationship("Verifier", back_populates="operator")
+
+class Vehicle(Base):
+    __tablename__ = "vehicles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    operator_id: Mapped[int] = mapped_column(Integer, ForeignKey("transport_operators.id"), nullable=False)
+    vehicle_type: Mapped[str] = mapped_column(String(50), default="BUS")  # "BUS" | "METRO_STATION"
+    vehicle_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "KL-15-A-1234"
+    device_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "ALUVA-GATE-04"
+    station_name: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)  # "Aluva Metro Station"
+    depot: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # "Thrissur Central Depot"
+    assigned_route: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # "Thrissur → Ernakulam"
+    route_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("routes.id"), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    operator = relationship("TransportOperator", back_populates="vehicles")
+    verifiers = relationship("Verifier", back_populates="vehicle")
+
+class Verifier(Base):
+    __tablename__ = "verifiers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    verifier_code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)  # "KSRTC-V1024", "PB-V2041", "METRO-V3012"
+    full_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    transport_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "KSRTC", "PRIVATE_BUS", "METRO"
+    operator_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("transport_operators.id"), nullable=True)
+    operator_name: Mapped[str] = mapped_column(String(200), default="KSRTC")
+    vehicle_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("vehicles.id"), nullable=True)
+    bus_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "KL-15-A-1234"
+    assigned_route: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # "Thrissur → Ernakulam"
+    depot: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # "Thrissur Depot"
+    station_device_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "ALUVA-GATE-04"
+    station_name: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)  # "Aluva Metro Station"
+    phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="ACTIVE")  # "ACTIVE", "SUSPENDED"
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="verifier_profile")
+    operator = relationship("TransportOperator", back_populates="verifiers")
+    vehicle = relationship("Vehicle", back_populates="verifiers")
+    verification_logs = relationship("VerificationLog", back_populates="verifier")
+
 class VerificationLog(Base):
     __tablename__ = "verification_logs"
 
@@ -216,6 +282,17 @@ class VerificationLog(Base):
     student_roll: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     route_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     verifier_identity: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    
+    # Server-derived verifier transport details
+    verifier_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("verifiers.id"), nullable=True)
+    verifier_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    verifier_name: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    transport_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "KSRTC", "PRIVATE_BUS", "METRO"
+    transport_operator: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    vehicle_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "KL-15-A-1234"
+    station_device_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # "ALUVA-GATE-04"
+    result: Mapped[str] = mapped_column(String(50), default="VALID")  # "VALID", "INVALID"
+
     status: Mapped[str] = mapped_column(String(50), nullable=False)  # "VERIFIED", "EXPIRED", "INVALID", "ALREADY_USED"
     status_code: Mapped[str] = mapped_column(String(50), default="200 OK")
     failure_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -224,6 +301,7 @@ class VerificationLog(Base):
 
     # Relationships
     pass_obj = relationship("Pass", back_populates="verification_logs")
+    verifier = relationship("Verifier", back_populates="verification_logs")
 
 class Notification(Base):
     __tablename__ = "notifications"

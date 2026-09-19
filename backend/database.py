@@ -96,6 +96,13 @@ def upgrade_db_schema():
                     conn.exec_driver_sql("ALTER TABLE passes ADD COLUMN valid_until VARCHAR(30) DEFAULT '31 / 03 / 2027'")
                 conn.commit()
 
+            # Check institutions table
+            inst_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(institutions)").fetchall()]
+            if inst_cols:
+                if "user_id" not in inst_cols:
+                    conn.exec_driver_sql("ALTER TABLE institutions ADD COLUMN user_id INTEGER")
+                conn.commit()
+
             # Check verification_logs table
             log_cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(verification_logs)").fetchall()]
             if log_cols:
@@ -109,6 +116,22 @@ def upgrade_db_schema():
                     conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN verifier_identity VARCHAR(100)")
                 if "failure_reason" not in log_cols:
                     conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN failure_reason TEXT")
+                if "verifier_id" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN verifier_id INTEGER")
+                if "verifier_code" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN verifier_code VARCHAR(50)")
+                if "verifier_name" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN verifier_name VARCHAR(150)")
+                if "transport_type" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN transport_type VARCHAR(50)")
+                if "transport_operator" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN transport_operator VARCHAR(200)")
+                if "vehicle_number" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN vehicle_number VARCHAR(50)")
+                if "station_device_id" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN station_device_id VARCHAR(50)")
+                if "result" not in log_cols:
+                    conn.exec_driver_sql("ALTER TABLE verification_logs ADD COLUMN result VARCHAR(50) DEFAULT 'VALID'")
                 conn.commit()
     except Exception as e:
         print("Schema upgrade notice:", e)

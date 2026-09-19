@@ -185,8 +185,8 @@ Visual hierarchy uses clean atmospheric physical layers, combining low-contrast 
 
 - **Level 0 (Canvas Base):** Flat `#f8fafc` background; provides zero elevation anchor.
 - **Level 1 (Card & Module Layer):** Pure `#ffffff` surface with a `1px` solid outline of `#e2e8f0` and an ambient shadow: `0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 1px 3px 0 rgba(15, 23, 42, 0.03)`.
-- **Level 2 (Floating Elements & Modals):** Interactive sheet modules, active NFC tap drawers, and bottom action pills. Elevated using an ambient drop shadow: `0 12px 32px -8px rgba(11, 21, 40, 0.12), 0 4px 12px -2px rgba(11, 21, 40, 0.05)`.
-- **Level 3 (Overlay & NFC Target):** Active physical boarding pass states and QR scanner focus overlays. Uses deep navy backplates (`#0b1528`) surrounded by luminous outer glows (`0 0 24px 0 rgba(14, 165, 233, 0.25)`).
+- **Level 2 (Floating Elements & Modals):** Interactive sheet modules, active QR tap drawers, and bottom action pills. Elevated using an ambient drop shadow: `0 12px 32px -8px rgba(11, 21, 40, 0.12), 0 4px 12px -2px rgba(11, 21, 40, 0.05)`.
+- **Level 3 (Overlay & QR Target):** Active physical boarding pass states and QR scanner focus overlays. Uses deep navy backplates (`#0b1528`) surrounded by luminous outer glows (`0 0 24px 0 rgba(14, 165, 233, 0.25)`).
 
 ## Shapes
 
@@ -201,7 +201,7 @@ The design system adopts a welcoming, tactile pill-forward geometry, using prono
 ### Buttons
 - **Primary Action (Tap & Pay, Purchase Pass):** Deep navy background (`#0b1528`), white typography (`#ffffff`), `rounded-full`, `height: 52px`, `padding: 0 24px`. On press: scales down smoothly to `98%` with opacity `0.92`.
 - **Secondary Action (Top Up, Transfer):** Crisp white background (`#ffffff`), border `1px solid #e2e8f0`, text color `#0f172a`. Subtle elevation change on hover/tap.
-- **Accent Active (NFC Activate):** Vivid Cyan background (`#0ea5e9`), pure white typography, gentle transit cyan ambient pulse ring.
+- **Accent Active (QR Activate):** Vivid Cyan background (`#0ea5e9`), pure white typography, gentle transit cyan ambient pulse ring.
 
 ### Floating Pill Navigation Bar
 - Floats detached `16px` above the bottom safe area.
@@ -211,7 +211,7 @@ The design system adopts a welcoming, tactile pill-forward geometry, using prono
 
 ### Transit Cards & University ID Header
 - **Campus Header Bar:** Spans full mobile width; presents university crest or text mark paired with an active student status badge (Emerald pill `#10b981` with soft green background `#ecfdf5`), student ID micro-label, and quick-action notification bell.
-- **Virtual Transit Pass:** Structural card (`rounded-3xl`) featuring a subtle gradient or dark navy container (`#0b1528`), dynamic QR/barcode viewport with punch-hole visual cutouts on the edges, live NFC wave animation, and clear student subsidy tier indicators.
+- **Virtual Transit Pass:** Structural card (`rounded-3xl`) featuring a subtle gradient or dark navy container (`#0b1528`), dynamic QR/barcode viewport with punch-hole visual cutouts on the edges, live QR wave animation, and clear student subsidy tier indicators.
 
 ### Route Badges & Live Countdown Chips
 - **Route Badges:** Compact pills (`rounded-full`) displaying route line codes (e.g., `M1`, `B42`, `L-Line`). High-contrast, line-specific color accents with bold `Inter` tracking.

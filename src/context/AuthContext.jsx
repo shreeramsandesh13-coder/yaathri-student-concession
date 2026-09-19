@@ -13,6 +13,8 @@ export function AuthProvider({ children }) {
     }
   });
   const [student, setStudent] = useState(null);
+  const [institution, setInstitution] = useState(null);
+  const [verifier, setVerifier] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem('yaathri_token') || null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
@@ -29,6 +31,8 @@ export function AuthProvider({ children }) {
           const res = await api.auth.getMe();
           setUser(res.user);
           setStudent(res.student);
+          setInstitution(res.institution);
+          setVerifier(res.verifier);
           localStorage.setItem('yaathri_user', JSON.stringify(res.user));
           setIsLoading(false);
           return;
@@ -38,6 +42,8 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('yaathri_user');
           setUser(null);
           setStudent(null);
+          setInstitution(null);
+          setVerifier(null);
         }
       }
       setIsLoading(false);
@@ -58,6 +64,8 @@ export function AuthProvider({ children }) {
 
       const meRes = await api.auth.getMe();
       setStudent(meRes.student);
+      setInstitution(meRes.institution);
+      setVerifier(meRes.verifier);
       return res;
     } catch (err) {
       setAuthError(err.message || 'Login failed.');
@@ -79,6 +87,8 @@ export function AuthProvider({ children }) {
 
       const meRes = await api.auth.getMe();
       setStudent(meRes.student);
+      setInstitution(meRes.institution);
+      setVerifier(meRes.verifier);
       return res;
     } catch (err) {
       setAuthError(err.message || 'Registration failed.');
@@ -93,12 +103,28 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
     setStudent(null);
+    setInstitution(null);
+    setVerifier(null);
     localStorage.removeItem('yaathri_token');
     localStorage.removeItem('yaathri_user');
   };
 
   const loginAsDemoStudent = async () => {
-    return login('shreeram.sandesh@cce.edu.in', 'Student@123');
+    return login('student@yaathri.kerala.gov.in', 'Student@123');
+  };
+
+  const loginAsDemoInstitution = async () => {
+    return login('institution@yaathri.kerala.gov.in', 'Institution@123');
+  };
+
+  const loginAsDemoVerifier = async (type = 'ksrtc') => {
+    if (type === 'bus') return login('verifier.bus@yaathri.kerala.gov.in', 'Verifier@123');
+    if (type === 'metro') return login('verifier.metro@yaathri.kerala.gov.in', 'Verifier@123');
+    return login('verifier.ksrtc@yaathri.kerala.gov.in', 'Verifier@123');
+  };
+
+  const loginAsDemoRto = async () => {
+    return login('rto@yaathri.kerala.gov.in', 'Rto@123');
   };
 
   const loginAsDemoAdmin = async () => {
@@ -107,6 +133,9 @@ export function AuthProvider({ children }) {
 
   const role = user?.role || null;
   const isAdmin = role === 'ADMIN';
+  const isInstitution = role === 'INSTITUTION' || role === 'ADMIN';
+  const isVerifier = role === 'VERIFIER';
+  const isRto = role === 'RTO';
   const isStudent = role === 'STUDENT';
   const isAuthenticated = !!token && !!user;
 
@@ -115,9 +144,14 @@ export function AuthProvider({ children }) {
       value={{
         user,
         student,
+        institution,
+        verifier,
         token,
         role,
         isAdmin,
+        isInstitution,
+        isVerifier,
+        isRto,
         isStudent,
         isAuthenticated,
         isLoading,
@@ -126,6 +160,9 @@ export function AuthProvider({ children }) {
         register,
         logout,
         loginAsDemoStudent,
+        loginAsDemoInstitution,
+        loginAsDemoVerifier,
+        loginAsDemoRto,
         loginAsDemoAdmin,
         setStudent,
       }}

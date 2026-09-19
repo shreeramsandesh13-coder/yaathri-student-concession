@@ -39,12 +39,12 @@ export default function QuickActions({ onOpenApply, onGoPass, onGoVerify, onOpen
     },
     {
       id: 'verify',
-      icon: 'qr_code_scanner',
-      title: 'Verify Pass',
-      description: 'Conductor and transit inspector instant cryptographic authenticity check.',
-      cta: 'Instant Scanner',
+      icon: 'hub',
+      title: 'Ecosystem Portals',
+      description: 'Access Conductor terminal, College verification desk, and RTO state authority.',
+      cta: 'Explore 4 Portals',
       onClick: onGoVerify,
-      color: 'text-sky-600 dark:text-sky-400',
+      color: 'text-amber-500 dark:text-amber-400',
     },
   ];
 

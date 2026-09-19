@@ -204,13 +204,13 @@ export default function AdminView() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            ADMINISTRATIVE CONTROL PORTAL • KERALA RTO NODE
+            INSTITUTION & COLLEGE CONCESSION DESK • കോളേജ് വെരിഫിക്കേഷൻ
           </div>
           <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-slate-900 dark:text-white mt-1">
-            Concession Governance Desk
+            Institution Concession Desk
           </h2>
           <p className="text-body-sm font-body-sm text-slate-500 dark:text-slate-400">
-            Real-time enrollment auditing, application verification, digital pass provisioning, and turnstile logs.
+            Audit student enrollments, inspect route corridors & uploaded certificates, approve or reject applications, and monitor issued digital passes.
           </p>
         </div>
 
