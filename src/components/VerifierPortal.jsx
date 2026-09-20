@@ -773,3 +773,4 @@ export default function VerifierPortal() {
     </div>
   );
 }
+

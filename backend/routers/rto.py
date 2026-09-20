@@ -181,3 +181,4 @@ def list_institutions(db: Session = Depends(get_db)):
 def list_routes(db: Session = Depends(get_db)):
     """List all gazetted transit routes eligible for concession."""
     return db.query(models.Route).filter(models.Route.is_active == True).all()
+

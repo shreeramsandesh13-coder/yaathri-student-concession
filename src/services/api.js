@@ -22,7 +22,15 @@ async function handleResponse(res) {
     let errorDetail = 'An unexpected server error occurred.';
     try {
       const data = await res.json();
-      errorDetail = data.detail || data.message || errorDetail;
+      if (typeof data.detail === 'string') {
+        errorDetail = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        errorDetail = data.detail.map((d) => d.msg || (typeof d === 'string' ? d : JSON.stringify(d))).join(', ');
+      } else if (data.message) {
+        errorDetail = typeof data.message === 'string' ? data.message : JSON.stringify(data.message);
+      } else if (data.detail && typeof data.detail === 'object') {
+        errorDetail = JSON.stringify(data.detail);
+      }
     } catch (e) {
       errorDetail = res.statusText || errorDetail;
     }

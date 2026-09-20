@@ -83,7 +83,7 @@ export default function AuthModal({ isOpen, onClose }) {
       await loginAsDemoStudent();
       onClose();
     } catch (err) {
-      setErrorMessage('Student demo login failed.');
+      setErrorMessage(err.message || 'Student demo login failed.');
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AuthModal({ isOpen, onClose }) {
       await loginAsDemoInstitution();
       onClose();
     } catch (err) {
-      setErrorMessage('Institution demo login failed.');
+      setErrorMessage(err.message || 'Institution demo login failed.');
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function AuthModal({ isOpen, onClose }) {
       await loginAsDemoVerifier('ksrtc');
       onClose();
     } catch (err) {
-      setErrorMessage('Verifier demo login failed.');
+      setErrorMessage(err.message || 'Verifier demo login failed.');
     } finally {
       setLoading(false);
     }
@@ -122,7 +122,7 @@ export default function AuthModal({ isOpen, onClose }) {
       await loginAsDemoRto();
       onClose();
     } catch (err) {
-      setErrorMessage('RTO demo login failed.');
+      setErrorMessage(err.message || 'RTO demo login failed.');
     } finally {
       setLoading(false);
     }

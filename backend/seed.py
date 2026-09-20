@@ -437,6 +437,64 @@ def seed_database():
             db.add(std_generic_prof)
             db.flush()
 
+        # Seed Application and Pass for generic student demo account (student@yaathri.kerala.gov.in)
+        app_std = db.query(models.Application).filter(models.Application.student_id == std_generic_prof.id).first()
+        if not app_std:
+            app_std = models.Application(
+                application_number="APP-2026-00100",
+                student_id=std_generic_prof.id,
+                route_id=route1.id,
+                academic_year="2024–2027",
+                status="APPROVED",
+                reviewer_notes="Verified via Kerala Higher Education Directory.",
+                reviewer_name="Admin Desk CCE",
+                transport_mode="Combined Intermodal",
+                starting_point="Thrissur Central",
+                destination="Ernakulam South",
+                route_name="LINE K-04 (Thrissur ⇄ Ernakulam)",
+                validity_start="01 / 06 / 2024",
+                validity_end="31 / 03 / 2027"
+            )
+            db.add(app_std)
+            db.flush()
+
+        pass_std = db.query(models.Pass).filter(models.Pass.student_id == std_generic_prof.id).first()
+        if not pass_std:
+            pass_std = models.Pass(
+                pass_number="SCP-2026-00100",
+                student_id=std_generic_prof.id,
+                route_id=route1.id,
+                application_id=app_std.id,
+                issue_date="01 / 06 / 2024",
+                expiry_date="31 / 03 / 2027",
+                subsidy_rate="80% KSRTC / 50% METRO",
+                hash_signature="78f89e2194ac5e88b2a19e072b4c12df8a9012cd",
+                status="ACTIVE",
+                student_name=std_generic_prof.full_name,
+                student_photo_url=std_generic_prof.photo_url,
+                institution_name=std_generic_prof.institution_name,
+                course=std_generic_prof.course,
+                roll_number=std_generic_prof.roll_number,
+                student_id_number=std_generic_prof.student_id_number,
+                transport_type="Bus + Metro",
+                starting_point="Thrissur Central",
+                destination="Ernakulam South",
+                route_name="LINE K-04 (Thrissur ⇄ Ernakulam)",
+                valid_from="01 / 06 / 2024",
+                valid_until="31 / 03 / 2027"
+            )
+            db.add(pass_std)
+            db.flush()
+
+            qr_std = models.QRCredential(
+                pass_id=pass_std.id,
+                qr_payload="YAATHRI:SCP-2026-00100:78f89e2194ac5e",
+                signature="78f89e2194ac5e",
+                expires_at=datetime.datetime.utcnow() + datetime.timedelta(days=365)
+            )
+            db.add(qr_std)
+            db.flush()
+
         # Student 2: Ananya Nair (Pending Application)
         student2_user = db.query(models.User).filter(models.User.email == "ananya.nair@rajagiri.edu.in").first()
         if not student2_user:
