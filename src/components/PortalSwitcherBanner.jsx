@@ -13,7 +13,12 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
   const [switchingId, setSwitchingId] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState(null);
 
-  const handleRoleSwitch = async (portalId, loginFn, targetTab) => {
+  const handleRoleSwitch = async (portalId, loginFn, targetTab, isCurrentRole) => {
+    // If the user is already on this role, navigate immediately without network delay
+    if (isCurrentRole) {
+      if (onSelectPortal) onSelectPortal(targetTab);
+      return;
+    }
     if (switchingId) return;
     setSwitchingId(portalId);
     setErrorMessage(null);
@@ -39,7 +44,7 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
       activeBorder: 'border-sky-500',
       actionText: 'Enter Student Portal',
       isCurrent: role === 'STUDENT',
-      onSwitch: () => handleRoleSwitch('student', loginAsDemoStudent, 'dashboard'),
+      onSwitch: () => handleRoleSwitch('student', loginAsDemoStudent, 'dashboard', role === 'STUDENT'),
     },
     {
       id: 'institution',
@@ -51,7 +56,7 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
       activeBorder: 'border-amber-500',
       actionText: 'Enter Institution Desk',
       isCurrent: role === 'INSTITUTION' || role === 'ADMIN',
-      onSwitch: () => handleRoleSwitch('institution', loginAsDemoInstitution, 'admin'),
+      onSwitch: () => handleRoleSwitch('institution', loginAsDemoInstitution, 'admin', role === 'INSTITUTION' || role === 'ADMIN'),
     },
     {
       id: 'verifier',
@@ -63,7 +68,7 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
       activeBorder: 'border-emerald-500',
       actionText: 'Enter Verifier Terminal',
       isCurrent: role === 'VERIFIER',
-      onSwitch: () => handleRoleSwitch('verifier', () => loginAsDemoVerifier('ksrtc'), 'verifier'),
+      onSwitch: () => handleRoleSwitch('verifier', () => loginAsDemoVerifier('ksrtc'), 'verifier', role === 'VERIFIER'),
     },
     {
       id: 'rto',
@@ -75,22 +80,22 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
       activeBorder: 'border-indigo-500',
       actionText: 'Enter RTO Authority',
       isCurrent: role === 'RTO',
-      onSwitch: () => handleRoleSwitch('rto', loginAsDemoRto, 'rto'),
+      onSwitch: () => handleRoleSwitch('rto', loginAsDemoRto, 'rto', role === 'RTO'),
     },
   ];
 
   return (
-    <section className="space-y-4 pt-4">
+    <section className="space-y-4 pt-2">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
         <div>
           <span className="text-xs font-bold font-mono text-sky-600 dark:text-sky-400 tracking-wider uppercase">
             YAATHRI ECOSYSTEM • FOUR ACCREDITED PORTALS
           </span>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
-            Role-Specific Portals & Verification Hub
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-0.5">
+            Role-Specific Portals &amp; Verification Hub
           </h2>
         </div>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
           Switch role to test full end-to-end verification workflows
         </span>
       </div>
@@ -102,14 +107,14 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {portals.map((p) => {
           const Icon = p.icon;
           const isSwitchingThis = switchingId === p.id;
           return (
             <div
               key={p.id}
-              className={`p-5 rounded-2xl bg-white dark:bg-slate-900/90 border transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4 ${
+              className={`p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900/90 border transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4 ${
                 p.isCurrent
                   ? `${p.activeBorder} shadow-lg ring-1 ring-amber-500/20`
                   : 'border-slate-200 dark:border-slate-800'
@@ -117,7 +122,7 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${p.color} border flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${p.color} border flex items-center justify-center shrink-0`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   {p.isCurrent ? (
@@ -145,20 +150,23 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
               <button
                 onClick={p.onSwitch}
                 disabled={switchingId !== null}
-                className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 ${
+                className={`w-full py-2.5 px-3 min-h-[42px] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 ${
                   p.isCurrent
-                    ? 'bg-slate-900 dark:bg-slate-800 text-white'
+                    ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-sm'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>
-                  {isSwitchingThis
-                    ? 'Authenticating...'
-                    : p.isCurrent
-                    ? 'Active View'
-                    : p.actionText}
-                </span>
-                {!isSwitchingThis && <span className="text-xs">→</span>}
+                {isSwitchingThis ? (
+                  <span className="inline-flex items-center gap-1.5 text-sky-500">
+                    <span className="w-3.5 h-3.5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                    Initializing...
+                  </span>
+                ) : (
+                  <>
+                    <span>{p.isCurrent ? 'Enter Portal' : p.actionText}</span>
+                    <span className="text-xs">→</span>
+                  </>
+                )}
               </button>
             </div>
           );
@@ -167,4 +175,3 @@ export default function PortalSwitcherBanner({ onSelectPortal }) {
     </section>
   );
 }
-

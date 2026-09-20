@@ -1,101 +1,125 @@
 import React from 'react';
 import ConcessionPass from './ConcessionPass';
+import Button from './ui/Button';
 
 /**
- * Hero section:
- * - High-impact cinematic presentation adapted for both Dark and Light modes
- * - Headline: "YOUR PASS. YOUR JOURNEY."
- * - Primary action: "GET YOUR PASS" (opens multi-step application)
- * - Secondary action: "VERIFY PASS" (navigates to verification scanner)
- * - Popular route chip & fintech micro-ledger metrics
- * - Hosts the interactive 3D Concession Pass alongside the hero content
+ * Fullscreen Cinematic Hero Component
+ * - Large typography: "THE DIGITAL PASS FOR EVERY JOURNEY."
+ * - Clear platform narrative connecting students, institutions, operators, and authorities.
+ * - Primary CTA: "Get Your Pass", Secondary CTA: "Explore YAATHRI"
+ * - Hosts the interactive 3D Concession Pass object with specimen fallback
  */
-export default function Hero({ onOpenApply, onGoVerify, studentData }) {
+export default function Hero({ onOpenApply, onGoExplore, studentData }) {
+  const handleExplore = () => {
+    if (onGoExplore) {
+      onGoExplore();
+    } else {
+      const el = document.getElementById('transport-ecosystem');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center min-h-[calc(100vh-8rem)] pt-6" id="hero-pass">
-      {/* LEFT COLUMN: Content Hierarchy */}
-      <div className="lg:col-span-6 space-y-6">
-        {/* Sub-tag Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#0D1118]/90 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-          <span className="text-label-caps font-label-caps text-slate-700 dark:text-slate-200 tracking-wider font-semibold">
-            YAATHRI — Student Concession Pass • ONE PASS • A BRIGHTER JOURNEY
-          </span>
-        </div>
-
-        {/* Hero Headline */}
-        <h1 className="text-headline-lg-mobile md:text-display-lg font-display-lg text-slate-900 dark:text-white tracking-tight">
-          ONE PASS.
-          <br />
-          <span className="bg-gradient-to-r from-sky-600 via-teal-500 to-amber-500 dark:from-sky-400 dark:via-teal-300 dark:to-amber-400 bg-clip-text text-transparent">
-            A BRIGHTER JOURNEY.
-          </span>
-        </h1>
-
-        {/* Supporting fintech copy */}
-        <p className="text-body-lg font-body-lg text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-          <span className="font-semibold text-teal-600 dark:text-teal-400">PEOPLE • PLACES • PROGRESS.</span> One unified digital concession pass for smarter, simpler student travel across KSRTC ordinary &amp; fast passenger fleets, Kochi Metro Line 1, and regional Kerala student transit networks. Zero physical tokens. Instant QR verification.
-        </p>
-
-        {/* CTAs & Route Chip */}
-        <div className="space-y-4 pt-2">
-          <div className="flex flex-wrap gap-4 items-center">
-            <button
-              onClick={onOpenApply}
-              className="relative group overflow-hidden bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 px-8 h-[52px] rounded-full inline-flex items-center justify-center space-x-2.5 font-label-lg text-label-lg shadow-md hover:shadow-xl dark:hover:shadow-sky-500/25 active:scale-95 transition-all duration-200 cursor-pointer font-bold"
-            >
-              <span className="relative z-10">GET YOUR PASS</span>
-              <span className="material-symbols-outlined text-[18px] relative z-10 group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-            </button>
-
-            <button
-              onClick={onGoVerify}
-              className="bg-white/90 dark:bg-[#111722]/90 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:border-sky-500 dark:hover:border-sky-400 px-7 h-[52px] rounded-full inline-flex items-center justify-center space-x-2 font-label-lg text-label-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/80 active:scale-95 transition-all duration-200 cursor-pointer font-semibold"
-            >
-              <span className="material-symbols-outlined text-[18px] text-sky-500 dark:text-sky-400">verified_user</span>
-              <span>VERIFY PASS</span>
-            </button>
-          </div>
-
-          {/* Route Badge Chip */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-100/90 dark:bg-[#111722]/80 border border-slate-200 dark:border-slate-800 text-body-sm font-body-sm text-slate-700 dark:text-slate-200">
-            <span className="px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-label-caps font-label-caps font-bold">
-              LINE K-04
+    <section id="hero" className="relative min-h-[calc(100vh-5rem)] flex items-center py-8 sm:py-12 lg:py-16">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center w-full">
+        
+        {/* Left Editorial Narrative Column */}
+        <div className="lg:col-span-6 space-y-6 sm:space-y-8 text-left">
+          
+          {/* Official Sub-tag Pill */}
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#0D121F]/90 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-slate-700 dark:text-slate-200 uppercase">
+              YAATHRI &bull; Student Mobility Platform
             </span>
-            <span className="font-medium">POPULAR ROUTE: THRISSUR ⇄ ERNAKULAM (Via Aluva &amp; Angamaly)</span>
-            <span className="material-symbols-outlined text-[16px] text-emerald-500">check_circle</span>
+          </div>
+
+          {/* Large Hero Headline */}
+          <div className="space-y-2">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-950 dark:text-white leading-[1.08] uppercase">
+              THE DIGITAL PASS
+              <br />
+              <span className="bg-gradient-to-r from-sky-600 via-teal-500 to-amber-500 dark:from-sky-400 dark:via-teal-300 dark:to-amber-400 bg-clip-text text-transparent">
+                FOR EVERY JOURNEY.
+              </span>
+            </h1>
+          </div>
+
+          {/* Clear Supporting Platform Description */}
+          <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-xl">
+            YAATHRI is Kerala's unified digital student concession platform connecting students, institutions, public bus fleets (KSRTC), Kochi Metro Line 1, and the Motor Vehicles Department under one cryptographically verified identity.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={onOpenApply}
+              icon={<span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
+              iconPosition="right"
+              className="shadow-lg hover:shadow-xl dark:shadow-sky-500/20 w-full sm:w-auto"
+            >
+              Get Your Pass
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleExplore}
+              icon={<span className="material-symbols-outlined text-[20px] text-sky-500">explore</span>}
+              className="w-full sm:w-auto"
+            >
+              Explore YAATHRI
+            </Button>
+          </div>
+
+          {/* Route Micro-Badge Chip */}
+          <div className="pt-2">
+            <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full bg-slate-100/90 dark:bg-[#111722]/80 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+              <span className="px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-[10px] font-mono font-bold shrink-0">
+                LINE K-04
+              </span>
+              <span className="font-medium text-[11px] sm:text-xs truncate">
+                THRISSUR &harr; ERNAKULAM (Via Aluva &amp; Angamaly)
+              </span>
+              <span className="material-symbols-outlined text-[16px] text-emerald-500 shrink-0">verified</span>
+            </div>
+          </div>
+
+          {/* Micro Metrics Strip */}
+          <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-200 dark:border-slate-800/80">
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">81.5%</div>
+              <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                Govt. Subsidy
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-sky-600 dark:text-sky-400 font-mono">₹12</div>
+              <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                Daily Fare
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">0.3s</div>
+              <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-0.5">
+                Turnstile Gate
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Micro Ledger Metric Indicators */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-          <div>
-            <div className="text-numeric-metric font-numeric-metric text-slate-900 dark:text-white">81.5%</div>
-            <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Govt. Travel Subsidy
-            </div>
+        {/* Right 3D Digital Concession Pass Column */}
+        <div className="lg:col-span-6 flex flex-col items-center justify-center relative select-none">
+          <div className="w-full flex justify-center">
+            <ConcessionPass studentData={studentData} />
           </div>
-          <div>
-            <div className="text-numeric-metric font-numeric-metric text-sky-600 dark:text-sky-400">₹12</div>
-            <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Subsidy Daily Fare
-            </div>
-          </div>
-          <div>
-            <div className="text-numeric-metric font-numeric-metric text-emerald-600 dark:text-emerald-400">0.3s</div>
-            <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Instant QR Access
-            </div>
-          </div>
+          <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-3 text-center">
+            Interactive 3D Identity Object &bull; Hover or Tap to Flip
+          </p>
         </div>
-      </div>
 
-      {/* RIGHT / CENTER COLUMN — THE PREMIUM 3D CONCESSION PASS */}
-      <div className="lg:col-span-6 flex flex-col items-center justify-center">
-        <ConcessionPass studentData={studentData} />
       </div>
     </section>
   );

@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
+import Modal from './ui/Modal';
+import Input from './ui/Input';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
 
+/**
+ * Redesigned Authentication Modal
+ * - Premium, minimal design system styling
+ * - Sign In, Sign Up, and Forgot Password flows
+ * - Explicit Demo Account switcher buttons (Student, Institution, Conductor, RTO)
+ * - Strict privacy: No default user leakage
+ */
 export default function AuthModal({ isOpen, onClose }) {
   const {
     login,
@@ -9,9 +21,8 @@ export default function AuthModal({ isOpen, onClose }) {
     loginAsDemoInstitution,
     loginAsDemoVerifier,
     loginAsDemoRto,
-    loginAsDemoAdmin,
-    authError,
   } = useAuth();
+
   const [tab, setTab] = useState('login'); // 'login' | 'register' | 'forgot'
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -25,12 +36,11 @@ export default function AuthModal({ isOpen, onClose }) {
   const [phone, setPhone] = useState('');
   const [collegeName, setCollegeName] = useState('Christ College of Engineering, Irinjalakuda');
 
-  if (!isOpen) return null;
-
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage('');
+    setSuccessMessage('');
     try {
       await login(email, password);
       onClose();
@@ -45,6 +55,7 @@ export default function AuthModal({ isOpen, onClose }) {
     e.preventDefault();
     setLoading(true);
     setErrorMessage('');
+    setSuccessMessage('');
     try {
       await register({
         email,
@@ -68,365 +79,298 @@ export default function AuthModal({ isOpen, onClose }) {
     setErrorMessage('');
     setSuccessMessage('');
     try {
-      setSuccessMessage(`Password recovery instructions & OTP dispatched to ${email}. (Demo bypass code: 2026)`);
+      const res = await api.auth.forgotPassword(email);
+      setSuccessMessage(res.message || 'Password reset link sent to your registered email.');
     } catch (err) {
-      setErrorMessage('Unable to process recovery request.');
+      setErrorMessage(err.message || 'Failed to send password reset link.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickStudent = async () => {
+  const handleDemoClick = async (demoFn) => {
     setLoading(true);
     setErrorMessage('');
+    setSuccessMessage('');
     try {
-      await loginAsDemoStudent();
+      await demoFn();
       onClose();
     } catch (err) {
-      setErrorMessage(err.message || 'Student demo login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickInstitution = async () => {
-    setLoading(true);
-    setErrorMessage('');
-    try {
-      await loginAsDemoInstitution();
-      onClose();
-    } catch (err) {
-      setErrorMessage(err.message || 'Institution demo login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickVerifier = async () => {
-    setLoading(true);
-    setErrorMessage('');
-    try {
-      await loginAsDemoVerifier('ksrtc');
-      onClose();
-    } catch (err) {
-      setErrorMessage(err.message || 'Verifier demo login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickRto = async () => {
-    setLoading(true);
-    setErrorMessage('');
-    try {
-      await loginAsDemoRto();
-      onClose();
-    } catch (err) {
-      setErrorMessage(err.message || 'RTO demo login failed.');
+      setErrorMessage(err.message || 'Demo authentication failed.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in select-none">
-      <div className="bg-white dark:bg-[#0D1118] text-slate-900 dark:text-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 transition-colors duration-300">
-        
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-400 flex items-center justify-center font-bold">
-              <span className="material-symbols-outlined text-[22px]">lock</span>
-            </div>
-            <div>
-              <h3 className="text-headline-sm font-headline-sm font-bold text-slate-900 dark:text-white">
-                YAATHRI Account
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Secure Authentication &amp; RBAC Access
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
-
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={tab === 'login' ? 'Sign In to YAATHRI' : tab === 'register' ? 'Student Registration' : 'Reset Password'}
+      subtitle={
+        tab === 'login'
+          ? 'Enter your credentials or choose an official role'
+          : tab === 'register'
+          ? 'Enroll in the Kerala student transit concession registry'
+          : 'Enter your registered email to receive reset instructions'
+      }
+      maxWidth="max-w-lg"
+    >
+      <div className="space-y-6">
         {/* Tab Switcher */}
-        <div className="flex p-1 bg-slate-100 dark:bg-[#111722] rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
+        <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
           <button
             type="button"
             onClick={() => { setTab('login'); setErrorMessage(''); setSuccessMessage(''); }}
-            className={`flex-1 py-2 rounded-lg transition-all ${tab === 'login' ? 'bg-white dark:bg-[#1A2333] text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              tab === 'login'
+                ? 'bg-white dark:bg-[#111722] text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
             Sign In
           </button>
           <button
             type="button"
             onClick={() => { setTab('register'); setErrorMessage(''); setSuccessMessage(''); }}
-            className={`flex-1 py-2 rounded-lg transition-all ${tab === 'register' ? 'bg-white dark:bg-[#1A2333] text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              tab === 'register'
+                ? 'bg-white dark:bg-[#111722] text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
-            Student Register
+            New Student
           </button>
           <button
             type="button"
             onClick={() => { setTab('forgot'); setErrorMessage(''); setSuccessMessage(''); }}
-            className={`flex-1 py-2 rounded-lg transition-all ${tab === 'forgot' ? 'bg-white dark:bg-[#1A2333] text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              tab === 'forgot'
+                ? 'bg-white dark:bg-[#111722] text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
-            Recovery
+            Help
           </button>
         </div>
 
-        {/* Alert Notifications */}
-        {(errorMessage || authError) && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center space-x-2">
-            <span className="material-symbols-outlined text-[16px]">error</span>
-            <span>{errorMessage || authError}</span>
+        {/* Alerts */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-700 dark:text-rose-300 flex items-center space-x-2">
+            <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+            <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs flex items-center space-x-2">
-            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-700 dark:text-emerald-300 flex items-center space-x-2">
+            <span className="material-symbols-outlined text-[18px] shrink-0">check_circle</span>
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* TAB 1: LOGIN */}
+        {/* SIGN IN FORM */}
         {tab === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@cce.edu.in or admin@yaathri.kerala.gov.in"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-              />
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="student@yaathri.kerala.gov.in"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              icon={<span className="material-symbols-outlined text-[18px]">mail</span>}
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              icon={<span className="material-symbols-outlined text-[18px]">lock</span>}
+            />
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setTab('forgot')}
+                className="text-xs text-sky-600 dark:text-sky-400 hover:underline cursor-pointer font-medium"
+              >
+                Forgot your password?
+              </button>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-              />
-            </div>
-
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-full bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-60"
+              variant="primary"
+              size="lg"
+              className="w-full"
+              isLoading={loading}
             >
-              {loading ? (
-                <>
-                  <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <span>Sign In to YAATHRI</span>
-              )}
-            </button>
+              Sign In
+            </Button>
           </form>
         )}
 
-        {/* TAB 2: REGISTER */}
+        {/* REGISTER FORM */}
         {tab === 'register' && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Full Name"
+                placeholder="Shreeram Sandesh"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Shreeram Sandesh"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Roll / Admission No.
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={rollNumber}
-                  onChange={(e) => setRollNumber(e.target.value)}
-                  placeholder="CCE24CS001"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98470 12345"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Institution / College
-              </label>
-              <input
-                type="text"
                 required
-                value={collegeName}
-                onChange={(e) => setCollegeName(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
+              <Input
+                label="Roll Number / ID"
+                placeholder="CCE24CS001"
+                value={rollNumber}
+                onChange={(e) => setRollNumber(e.target.value)}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@cce.edu.in"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Create Password (min. 6 characters)
-              </label>
-              <input
+            <Input
+              label="Institutional Email"
+              type="email"
+              placeholder="student@cce.edu.in"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              icon={<span className="material-symbols-outlined text-[18px]">school</span>}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Phone Number"
+                type="tel"
+                placeholder="+91 98470 12345"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+              <Input
+                label="Password"
                 type="password"
-                required
-                minLength={6}
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                required
               />
             </div>
 
-            <button
+            <Input
+              label="College / School"
+              value={collegeName}
+              onChange={(e) => setCollegeName(e.target.value)}
+              required
+            />
+
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-full bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-60 mt-1"
+              variant="primary"
+              size="lg"
+              className="w-full"
+              isLoading={loading}
             >
-              {loading ? <span>Creating Student Account...</span> : <span>Complete Registration</span>}
-            </button>
+              Create Account &bull; Apply
+            </Button>
           </form>
         )}
 
-        {/* TAB 3: FORGOT PASSWORD */}
+        {/* FORGOT PASSWORD FORM */}
         {tab === 'forgot' && (
           <form onSubmit={handleForgotSubmit} className="space-y-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Enter your registered student or administrative email to receive a password reset token and verification PIN.
-            </p>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="registered-id@domain.edu.in"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
-              />
-            </div>
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="Enter your registered email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              icon={<span className="material-symbols-outlined text-[18px]">mail</span>}
+            />
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-full bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-60"
+              variant="primary"
+              size="lg"
+              className="w-full"
+              isLoading={loading}
             >
-              {loading ? <span>Requesting...</span> : <span>Send Reset Instructions</span>}
-            </button>
+              Send Reset Link
+            </Button>
           </form>
         )}
 
-        {/* QUICK 1-CLICK DEMO AUTH BAR */}
-        <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
-            <span>Instant Demo Account Switch</span>
-            <span className="text-amber-500 font-mono">4 Roles</span>
+        {/* EXPLICIT DEMO ACCOUNT SWITCHER */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">
+              EXPLICIT DEMO ACCOUNTS (NO PASSWORD REQUIRED)
+            </span>
+            <Badge variant="neutral" size="sm">TEST ACCESS</Badge>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button
               type="button"
-              onClick={handleQuickStudent}
               disabled={loading}
-              className="px-2.5 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-800/80 text-sky-800 dark:text-sky-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+              onClick={() => handleDemoClick(loginAsDemoStudent)}
+              className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer focus:outline-none"
             >
-              <span>🎓 Student</span>
-              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">Shreeram (Pass)</span>
+              <span className="material-symbols-outlined text-[20px] text-emerald-500 block mb-1">
+                school
+              </span>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Student</p>
+              <p className="text-[10px] font-mono text-slate-500">Demo Pass</p>
             </button>
 
             <button
               type="button"
-              onClick={handleQuickInstitution}
               disabled={loading}
-              className="px-2.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+              onClick={() => handleDemoClick(loginAsDemoInstitution)}
+              className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer focus:outline-none"
             >
-              <span>🏫 Institution</span>
-              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">Christ College Desk</span>
+              <span className="material-symbols-outlined text-[20px] text-indigo-500 block mb-1">
+                admin_panel_settings
+              </span>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Institution</p>
+              <p className="text-[10px] font-mono text-slate-500">Registrar Desk</p>
             </button>
 
             <button
               type="button"
-              onClick={handleQuickVerifier}
               disabled={loading}
-              className="px-2.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+              onClick={() => handleDemoClick(() => loginAsDemoVerifier('ksrtc'))}
+              className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer focus:outline-none"
             >
-              <span>🚌 Conductor</span>
-              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">KSRTC (Arun Kumar)</span>
+              <span className="material-symbols-outlined text-[20px] text-amber-500 block mb-1">
+                directions_bus
+              </span>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Conductor</p>
+              <p className="text-[10px] font-mono text-slate-500">KSRTC Terminal</p>
             </button>
 
             <button
               type="button"
-              onClick={handleQuickRto}
               disabled={loading}
-              className="px-2.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-800 dark:text-indigo-300 text-xs font-bold flex flex-col items-center justify-center transition-all cursor-pointer"
+              onClick={() => handleDemoClick(loginAsDemoRto)}
+              className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer focus:outline-none"
             >
-              <span>🏛️ RTO Authority</span>
-              <span className="text-[9px] opacity-75 font-mono truncate max-w-[120px]">State Commissioner</span>
+              <span className="material-symbols-outlined text-[20px] text-sky-500 block mb-1">
+                shield
+              </span>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">RTO Authority</p>
+              <p className="text-[10px] font-mono text-slate-500">Kerala MVD</p>
             </button>
-          </div>
-
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center pt-1">
-            Official notice: Conductor &amp; RTO accounts are department-authorized. Only students may register publicly.
           </div>
         </div>
-
       </div>
-    </div>
+    </Modal>
   );
 }
-

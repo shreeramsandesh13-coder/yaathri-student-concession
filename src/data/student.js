@@ -33,6 +33,41 @@ export const initialStudentData = {
   avatarUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuD9ukqfRlV3BjW5BDnEj1pkMykcGD64BSVB2IEG2tsIF7nJLpHk0dOlPhLQJB0bR8ciE7SM--mLsRN6U5paQfAOhjGCUFsdCiK7LCo-Oq1gJJuQqEk5lwpIcrj20FqQTJVUpKC_BuY7Zn_EHuxxbhkF4uQg1Tq9hktM61y5kI4kWC0qgLi-DkWqqnb0w4yWHWHsjWg_eJD-1iXSULhbVOQDvXAgTYL-6LCAM0ZETfOczKC_NAJwAYZ3"
 };
 
+export const specimenStudentData = {
+  name: "SAMPLE / SPECIMEN",
+  rollNo: "SPECIMEN-2026",
+  passId: "SCP-SAMPLE-0000",
+  college: "Kerala State Student Transit",
+  course: "Sample Concession Pass",
+  year: "Specimen Preview",
+  phone: "+91 ••••• •••••",
+  email: "guest@yaathri.kerala.gov.in",
+  age: "—",
+  dob: "—",
+  origin: "Thrissur Central",
+  destination: "Ernakulam South",
+  routeCorridor: "Thrissur ⇄ Ernakulam (Via Aluva, Angamaly, Chalakudy)",
+  zone: "ZONE 08-KL",
+  issueDate: "SAMPLE PASS",
+  validUntil: "2026 – 2027",
+  status: "SAMPLE",
+  issuedBy: "Kerala Motor Vehicles Department & KSRTC",
+  academicYear: "2026–2027",
+  securityKey: "KL-SPECIMEN-SAMPLE",
+  concessionRate: "80% KSRTC / 50% METRO",
+  dailyFare: "₹12",
+  subsidyPercentage: "81.5%",
+  turnstileGateTime: "0.3s",
+  bloodGroup: "—",
+  emergencyPhone: "—",
+  studentAddress: "Kerala State Student Transit Network",
+  collegeAddress: "Kerala Higher Education Department",
+  medicalInfo: "—",
+  otherInfo: "Sign in to access your verified personal concession pass",
+  photoUrl: null,
+  isSpecimen: true
+};
+
 export const verificationDatabase = {
   "SCP-2026-00124": {
     status: "ACTIVE",
@@ -48,7 +83,7 @@ export const verificationDatabase = {
     issuedBy: "Principal, Christ College & RTO Thrissur",
     hashIntegrity: "MATCHED (KL-08-9941)",
     terminalCode: "TERMINAL-KL-RTO-TCR",
-    biometricStatus: "BIOMETRIC ENROLLED & VERIFIED",
+    credentialStatus: "STUDENT IDENTITY ENROLLED & VERIFIED",
     statusCode: "200 OK"
   },
   "KL-08-CCE-9941": {
@@ -65,7 +100,7 @@ export const verificationDatabase = {
     issuedBy: "Principal, Christ College & RTO Thrissur",
     hashIntegrity: "MATCHED (KL-08-9941)",
     terminalCode: "TERMINAL-KL-RTO-TCR",
-    biometricStatus: "BIOMETRIC ENROLLED & VERIFIED",
+    credentialStatus: "STUDENT IDENTITY ENROLLED & VERIFIED",
     statusCode: "200 OK"
   },
   "SCP-2024-EXP01": {
@@ -82,7 +117,7 @@ export const verificationDatabase = {
     issuedBy: "Principal, GEC Thrissur & RTO Thrissur",
     hashIntegrity: "SIGNATURE EXPIRED",
     terminalCode: "TERMINAL-KL-RTO-TCR",
-    biometricStatus: "EXPIRED CREDENTIAL",
+    credentialStatus: "EXPIRED CREDENTIAL",
     statusCode: "410 GONE"
   }
 };

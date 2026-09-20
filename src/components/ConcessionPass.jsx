@@ -45,7 +45,7 @@ export default function ConcessionPass({ studentData }) {
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         onClick={handleCardClick}
-        className="relative w-full max-w-[390px] sm:max-w-[430px] p-3 sm:p-4 cursor-pointer select-none group touch-manipulation"
+        className="relative w-full max-w-[330px] sm:max-w-[430px] p-1 sm:p-4 cursor-pointer select-none group touch-manipulation"
       >
         {/* Interactive Magnetic Aura Glow */}
         <div

@@ -1,178 +1,148 @@
 import React from 'react';
+import Badge from './ui/Badge';
+import SectionHeader from './ui/SectionHeader';
 
 /**
- * ApplicationTimeline component:
- * - Displays the 4-step concession pass lifecycle
- * - Displays active route telemetry modules: Next bus, Metro concession, semester savings
- * - Fully adapted for both Light and Dark themes
+ * Rebuilt Application Timeline Component
+ * Stages:
+ * 01 Submitted
+ * 02 Institution Review
+ * 03 Verification
+ * 04 Approved / Rejected
+ * 05 Digital Pass Issued
  */
-export default function ApplicationTimeline({ timeline, studentData }) {
+export default function ApplicationTimeline({ studentData }) {
+  const status = studentData?.status || 'ACTIVE';
+  const isRejected = status === 'REJECTED';
+  const isPending = status === 'PENDING';
+  const isActive = status === 'ACTIVE';
+
+  const stages = [
+    {
+      step: 1,
+      title: 'Submitted',
+      desc: 'Online student application submitted with identity proofs',
+      completed: true,
+      active: isPending,
+      date: studentData?.issueDate || 'Completed',
+    },
+    {
+      step: 2,
+      title: 'Institution Review',
+      desc: 'College administration verifies academic enrollment',
+      completed: !isPending,
+      active: isPending,
+      date: isPending ? 'In Progress' : 'Verified',
+    },
+    {
+      step: 3,
+      title: 'Verification',
+      desc: 'Corridor check and subsidy allocation review',
+      completed: isActive,
+      active: false,
+      date: isActive ? 'Attested' : isRejected ? 'Rejected' : 'Queued',
+    },
+    {
+      step: 4,
+      title: isRejected ? 'Rejected' : 'Approved',
+      desc: isRejected ? (studentData?.rejectionReason || 'Declined by reviewer') : 'Subsidy sanctioned by transport authority',
+      completed: isActive,
+      active: isRejected,
+      isError: isRejected,
+      date: isActive ? 'Approved' : isRejected ? 'Terminated' : 'Pending',
+    },
+    {
+      step: 5,
+      title: 'Digital Pass Issued',
+      desc: 'Cryptographic QR pass activated for transit journeys',
+      completed: isActive,
+      active: false,
+      date: isActive ? 'Active' : 'Locked',
+    },
+  ];
+
   return (
-    <section
-      className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm space-y-8"
-      id="timeline-section"
-    >
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div>
-          <div className="text-label-caps font-label-caps text-sky-600 dark:text-sky-400 uppercase tracking-widest font-semibold">
-            LIVE PASS STATUS &amp; APPLICATION AUDIT
-          </div>
-          <h2 className="text-headline-md font-headline-md text-slate-900 dark:text-white">
-            Application Timeline &amp; Concession Lifecycle
-          </h2>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-[#111722] text-body-sm font-body-sm text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2" />
-            Academic Year: {studentData.academicYear}
-          </span>
-        </div>
-      </div>
-
-      {/* Rejection Alert Banner if applicable */}
-      {studentData.rejectionReason && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start space-x-3 text-xs animate-fade-in">
-          <span className="material-symbols-outlined text-rose-600 dark:text-rose-400 text-[22px] shrink-0">
-            warning
-          </span>
+    <section id="application-timeline" className="w-full py-12 sm:py-16">
+      <div className="rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-10 shadow-sm space-y-8">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800 gap-4">
           <div>
-            <span className="font-bold text-rose-800 dark:text-rose-300 text-sm block">
-              Concession Request Rejected by Administrative Officer
-            </span>
-            <p className="text-rose-700 dark:text-rose-400 mt-1 font-medium">
-              <strong>Official Feedback:</strong> {studentData.rejectionReason}
-            </p>
+            <div className="inline-flex items-center space-x-2 text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span>LIVE APPLICATION TIMELINE</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+              Concession Attestation Lifecycle
+            </h2>
+          </div>
+
+          <div className="flex items-center space-x-3 text-xs font-mono">
+            <span className="text-slate-400 uppercase">APPLICATION STATUS:</span>
+            <Badge variant={isActive ? 'success' : isRejected ? 'danger' : 'warning'} size="md" dot>
+              {status}
+            </Badge>
           </div>
         </div>
-      )}
 
-      {/* Horizontal Status Progression Tracker */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
-        {timeline.map((step) => {
-          if (step.isError) {
-            return (
-              <div
-                key={step.step}
-                className="bg-rose-950/80 text-white rounded-2xl p-4 border border-rose-500/60 relative shadow-md"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold">
-                    ✕
-                  </span>
-                  <span className="text-label-caps font-label-caps text-rose-300 uppercase font-bold">
-                    {step.date}
-                  </span>
-                </div>
-                <h3 className="text-label-lg font-label-lg text-white font-semibold">
-                  {step.title}
-                </h3>
-                <p className="text-body-sm font-body-sm text-rose-200 mt-1">
-                  {step.description}
-                </p>
-              </div>
-            );
-          }
+        {/* Rejection Alert if applicable */}
+        {isRejected && (
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start space-x-3 text-xs text-rose-700 dark:text-rose-300">
+            <span className="material-symbols-outlined text-[22px] shrink-0">error</span>
+            <div>
+              <p className="font-bold text-sm">Application Rejected by Reviewer</p>
+              <p className="mt-0.5">{studentData?.rejectionReason || 'Please resubmit your application with valid enrollment documents.'}</p>
+            </div>
+          </div>
+        )}
 
-          if (step.active) {
-            return (
-              <div
-                key={step.step}
-                className="bg-slate-900 dark:bg-[#161F2E] text-white rounded-2xl p-4 border border-sky-500/50 relative shadow-md"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="w-7 h-7 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center text-xs font-bold animate-pulse">
-                    ●
-                  </span>
-                  <span className="text-label-caps font-label-caps text-sky-300 uppercase font-bold">
-                    {step.date}
-                  </span>
-                </div>
-                <h3 className="text-label-lg font-label-lg text-white font-semibold">
-                  {step.title}
-                </h3>
-                <p className="text-body-sm font-body-sm text-slate-300 dark:text-slate-400 mt-1">
-                  {step.description}
-                </p>
-              </div>
-            );
-          }
-
-          return (
+        {/* 5-Step Progression Track */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {stages.map((st) => (
             <div
-              key={step.step}
-              className="bg-slate-50/80 dark:bg-[#111722]/80 rounded-2xl p-4 border border-slate-200 dark:border-slate-800/80 relative overflow-hidden"
+              key={st.step}
+              className={`p-5 rounded-2xl border flex flex-col justify-between space-y-3 transition-all ${
+                st.isError
+                  ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+                  : st.completed
+                  ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/60 text-slate-900 dark:text-white'
+                  : st.active
+                  ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 text-slate-900 dark:text-white'
+                  : 'bg-slate-50/60 dark:bg-[#0E1524] border-slate-200/60 dark:border-slate-800 text-slate-400'
+              }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">
-                  ✓
+              <div className="flex items-center justify-between">
+                <span
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold ${
+                    st.isError
+                      ? 'bg-rose-500 text-white'
+                      : st.completed
+                      ? 'bg-emerald-500 text-white'
+                      : st.active
+                      ? 'bg-amber-500 text-white animate-pulse'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                  }`}
+                >
+                  {st.isError ? '✕' : st.completed ? '✓' : st.step}
                 </span>
-                <span className="text-label-caps font-label-caps text-emerald-600 dark:text-emerald-400 uppercase font-semibold">
-                  {step.date}
+
+                <span className="text-[10px] font-mono uppercase font-bold tracking-wider opacity-70">
+                  {st.date}
                 </span>
               </div>
-              <h3 className="text-label-lg font-label-lg text-slate-900 dark:text-white font-semibold">
-                {step.title}
-              </h3>
-              <p className="text-body-sm font-body-sm text-slate-500 dark:text-slate-400 mt-1">
-                {step.description}
-              </p>
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Active Route Telemetry Mini-Module */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-        <div className="bg-slate-50 dark:bg-[#111722] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 flex items-center space-x-4 hover:shadow-sm transition-all">
-          <div className="w-12 h-12 rounded-xl bg-white dark:bg-[#0D1118] text-sky-600 dark:text-sky-400 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center shrink-0 shadow-sm">
-            <span className="material-symbols-outlined text-[26px]">directions_bus</span>
-          </div>
-          <div>
-            <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase">
-              Next Subsidized Bus
+              <div>
+                <h3 className="text-sm font-bold tracking-tight uppercase mb-1">
+                  {st.title}
+                </h3>
+                <p className="text-[11px] leading-relaxed opacity-80">
+                  {st.desc}
+                </p>
+              </div>
             </div>
-            <div className="text-headline-sm font-headline-sm text-slate-900 dark:text-white font-semibold">
-              KSRTC Fast Passenger
-            </div>
-            <div className="text-body-sm font-body-sm text-emerald-600 dark:text-emerald-400 font-semibold">
-              Departs 08:15 AM (Bay 3, Thrissur Stand)
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="bg-slate-50 dark:bg-[#111722] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 flex items-center space-x-4 hover:shadow-sm transition-all">
-          <div className="w-12 h-12 rounded-xl bg-white dark:bg-[#0D1118] text-sky-600 dark:text-sky-400 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center shrink-0 shadow-sm">
-            <span className="material-symbols-outlined text-[26px]">subway</span>
-          </div>
-          <div>
-            <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase">
-              Kochi Metro Concession
-            </div>
-            <div className="text-headline-sm font-headline-sm text-slate-900 dark:text-white font-semibold">
-              Line 1: Aluva ⇄ Thykoodam
-            </div>
-            <div className="text-body-sm font-body-sm text-sky-600 dark:text-sky-400 font-semibold">
-              50% Student Discount Applied
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-50 dark:bg-[#111722] rounded-2xl p-5 border border-slate-200 dark:border-slate-800 flex items-center space-x-4 hover:shadow-sm transition-all">
-          <div className="w-12 h-12 rounded-xl bg-white dark:bg-[#0D1118] text-emerald-600 dark:text-emerald-400 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center shrink-0 shadow-sm">
-            <span className="material-symbols-outlined text-[26px]">energy_savings_leaf</span>
-          </div>
-          <div>
-            <div className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase">
-              Semester Savings
-            </div>
-            <div className="text-headline-sm font-headline-sm text-slate-900 dark:text-white font-semibold">
-              ₹4,860 Saved
-            </div>
-            <div className="text-body-sm font-body-sm text-slate-500 dark:text-slate-400">
-              Avg. 44 trips subsidized this month
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

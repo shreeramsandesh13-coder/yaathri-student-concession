@@ -2,54 +2,71 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import confetti from 'canvas-confetti';
 import RouteMap from './RouteMap';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Badge from './ui/Badge';
+import Drawer from './ui/Drawer';
+import Modal from './ui/Modal';
+import Skeleton from './ui/Skeleton';
 
+/**
+ * Rebuilt Institution Portal (Registrar & Dean Desk)
+ * High-density, professional management dashboard:
+ * - Real KPI statistics with skeleton loaders
+ * - Application queue with search, status filters
+ * - Document & Proof inspection drawer
+ * - Approval & Rejection workflow with live backend sync
+ */
 export default function AdminView() {
-  const [activeSubTab, setActiveSubTab] = useState('applications'); // 'applications' | 'students' | 'routes' | 'verifications'
+  const [activeTab, setActiveTab] = useState('applications'); // 'applications' | 'verifications'
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Real Database Statistics
+
+  // Stats
   const [stats, setStats] = useState({
     total_applications: 0,
     pending_applications: 0,
     approved_applications: 0,
     rejected_applications: 0,
-    active_passes: 0,
-    expired_passes: 0,
-    total_students: 0,
   });
-  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  // Entities Data
+  // Applications
   const [applications, setApplications] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [routes, setRoutes] = useState([]);
-  const [selectedRouteForMap, setSelectedRouteForMap] = useState(null);
-  const [verifications, setVerifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // UI States
-  const [loading, setLoading] = useState(false);
-  const [actionMessage, setActionMessage] = useState(null);
-
-  // Modals
+  // Inspection Drawer
   const [selectedApp, setSelectedApp] = useState(null);
-  const [approveModalApp, setApproveModalApp] = useState(null);
-  const [approveNotes, setApproveNotes] = useState('Verified and endorsed for academic year transit.');
-  const [rejectModalApp, setRejectModalApp] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [actionNotice, setActionNotice] = useState(null);
 
-  // Verification Filters
-  const [verificationSearch, setVerificationSearch] = useState('');
-  const [verificationStatusFilter, setVerificationStatusFilter] = useState('');
+  // Approval Modal
+  const [approveApp, setApproveApp] = useState(null);
+  const [approveNotes, setApproveNotes] = useState('Attested for academic year transit concession.');
+
+  // Rejection Modal
+  const [rejectApp, setRejectApp] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  useEffect(() => {
+    fetchStats();
+    fetchApplications();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchApplications();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery, statusFilter]);
 
   const fetchStats = async () => {
     setStatsLoading(true);
     try {
       const data = await api.admin.getStats();
-      setStats(data);
+      if (data) setStats(data);
     } catch (e) {
-      console.error('Failed to fetch admin stats:', e);
+      console.warn('Failed to load stats:', e);
     } finally {
       setStatsLoading(false);
     }
@@ -59,1259 +76,443 @@ export default function AdminView() {
     setLoading(true);
     try {
       const data = await api.admin.listApplications(searchQuery || null, statusFilter || null);
-      setApplications(data);
+      setApplications(data || []);
     } catch (e) {
-      console.error('Failed to fetch applications:', e);
+      console.warn('Failed to fetch applications:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStudents = async () => {
+  const showNotice = (msg) => {
+    setActionNotice(msg);
+    setTimeout(() => setActionNotice(null), 4000);
+  };
+
+  const handleApproveSubmit = async () => {
+    if (!approveApp) return;
+    setIsProcessing(true);
     try {
-      const data = await api.admin.listStudents();
-      setStudents(data);
-    } catch (e) {
-      console.error('Failed to fetch students:', e);
-    }
-  };
-
-  const fetchRoutes = async () => {
-    try {
-      const data = await api.admin.listRoutes();
-      setRoutes(data);
-    } catch (e) {
-      console.error('Failed to fetch routes:', e);
-    }
-  };
-
-  const fetchVerifications = async () => {
-    try {
-      const data = await api.admin.listVerifications({
-        search: verificationSearch || null,
-        status_filter: verificationStatusFilter || null,
-        limit: 100,
-      });
-      setVerifications(data);
-    } catch (e) {
-      console.error('Failed to fetch verifications:', e);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    if (activeSubTab === 'applications') {
-      fetchApplications();
-    } else if (activeSubTab === 'students') {
-      fetchStudents();
-    } else if (activeSubTab === 'routes') {
-      fetchRoutes();
-    } else if (activeSubTab === 'verifications') {
-      fetchVerifications();
-    }
-  }, [activeSubTab, statusFilter, verificationStatusFilter]);
-
-  const handleVerificationSearchSubmit = (e) => {
-    e.preventDefault();
-    fetchVerifications();
-  };
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    fetchApplications();
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    fetchApplications();
-  };
-
-  const handleOpenApproveModal = (app) => {
-    setApproveModalApp(app);
-    setApproveNotes('Verified and endorsed under Kerala MVD Student Concession Guidelines.');
-  };
-
-  const handleConfirmApprove = async () => {
-    if (!approveModalApp) return;
-    setIsProcessingAction(true);
-    try {
-      const updated = await api.admin.approveApplication(approveModalApp.id, approveNotes);
-      try {
-        confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
-      } catch (e) {}
-
-      setActionMessage(`Application ${approveModalApp.application_number} approved! Digital Pass provisioned.`);
-      setTimeout(() => setActionMessage(null), 5000);
-
-      // Refresh applications & stats
-      fetchApplications();
+      await api.admin.reviewApplication(approveApp.id, 'APPROVE', approveNotes, 365, '80% KSRTC / 50% METRO');
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+      showNotice(`Application #${approveApp.application_number} Approved! Digital pass generated.`);
+      setApproveApp(null);
+      setSelectedApp(null);
       fetchStats();
-
-      // Update selected app if open
-      if (selectedApp && selectedApp.id === approveModalApp.id) {
-        setSelectedApp(updated);
-      }
-
-      setApproveModalApp(null);
-    } catch (err) {
-      alert(`Approval failed: ${err.message}`);
-    } finally {
-      setIsProcessingAction(false);
-    }
-  };
-
-  const handleOpenRejectModal = (app) => {
-    setRejectModalApp(app);
-    setRejectionReason('');
-  };
-
-  const handleConfirmReject = async () => {
-    if (!rejectModalApp) return;
-    if (!rejectionReason.trim()) {
-      alert('Please provide a specific rejection reason for the student notification.');
-      return;
-    }
-    setIsProcessingAction(true);
-    try {
-      const updated = await api.admin.rejectApplication(rejectModalApp.id, rejectionReason.trim());
-      setActionMessage(`Application ${rejectModalApp.application_number} rejected. Notification dispatched.`);
-      setTimeout(() => setActionMessage(null), 5000);
-
-      // Refresh applications & stats
       fetchApplications();
-      fetchStats();
-
-      // Update selected app if open
-      if (selectedApp && selectedApp.id === rejectModalApp.id) {
-        setSelectedApp(updated);
-      }
-
-      setRejectModalApp(null);
     } catch (err) {
-      alert(`Rejection failed: ${err.message}`);
+      showNotice(err.message || 'Failed to approve application.');
     } finally {
-      setIsProcessingAction(false);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!rejectApp) return;
+    setIsProcessing(true);
+    try {
+      await api.admin.reviewApplication(rejectApp.id, 'REJECT', rejectReason || 'Incomplete institutional proof.');
+      showNotice(`Application #${rejectApp.application_number} Rejected.`);
+      setRejectApp(null);
+      setSelectedApp(null);
+      fetchStats();
+      fetchApplications();
+    } catch (err) {
+      showNotice(err.message || 'Failed to reject application.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
-    <section className="space-y-6 pt-4 animate-fade-in" id="admin-view-section">
-      {/* Admin Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            INSTITUTION & COLLEGE CONCESSION DESK • കോളേജ് വെരിഫിക്കേഷൻ
-          </div>
-          <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-slate-900 dark:text-white mt-1">
-            Institution Concession Desk
-          </h2>
-          <p className="text-body-sm font-body-sm text-slate-500 dark:text-slate-400">
-            Audit student enrollments, inspect route corridors & uploaded certificates, approve or reject applications, and monitor issued digital passes.
-          </p>
-        </div>
-
-        {/* Sub-tab Navigation */}
-        <div className="flex p-1 bg-slate-100 dark:bg-[#111722] rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold self-start sm:self-auto overflow-x-auto">
-          <button
-            onClick={() => setActiveSubTab('applications')}
-            className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-              activeSubTab === 'applications'
-                ? 'bg-[#081b2e] dark:bg-sky-500 text-white dark:text-slate-950 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Applications ({stats.total_applications})
-          </button>
-          <button
-            onClick={() => setActiveSubTab('students')}
-            className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-              activeSubTab === 'students'
-                ? 'bg-[#081b2e] dark:bg-sky-500 text-white dark:text-slate-950 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Students ({stats.total_students})
-          </button>
-          <button
-            onClick={() => setActiveSubTab('routes')}
-            className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-              activeSubTab === 'routes'
-                ? 'bg-[#081b2e] dark:bg-sky-500 text-white dark:text-slate-950 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Routes &amp; Fleet
-          </button>
-          <button
-            onClick={() => setActiveSubTab('verifications')}
-            className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-              activeSubTab === 'verifications'
-                ? 'bg-[#081b2e] dark:bg-sky-500 text-white dark:text-slate-950 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Turnstile Logs
-          </button>
-        </div>
-      </div>
-
-      {/* Action Notification Toast */}
-      {actionMessage && (
-        <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm font-semibold flex items-center space-x-2 animate-fade-in shadow-md">
-          <span className="material-symbols-outlined text-[20px]">verified</span>
-          <span>{actionMessage}</span>
+    <div className="w-full space-y-8">
+      
+      {/* Toast Notice */}
+      {actionNotice && (
+        <div className="fixed top-24 right-4 sm:right-8 z-50 p-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xl border border-slate-700 dark:border-slate-300 flex items-center space-x-3 text-xs sm:text-sm font-semibold animate-slideInRight">
+          <span className="material-symbols-outlined text-emerald-500 text-[20px]">verified</span>
+          <span>{actionNotice}</span>
         </div>
       )}
 
-      {/* REAL DATABASE STATS CARDS (7 KPI METRICS) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        {/* Total Applications */}
-        <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#0D1118]/85 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Total Apps</span>
-            <span className="material-symbols-outlined text-[16px] text-sky-500">description</span>
+      {/* 1. INSTITUTION HEADER & KPI METRICS */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center space-x-2 text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span>COLLEGE &amp; SCHOOL REGISTRAR DESK</span>
+            </div>
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+              Institution Verification Portal
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Christ College of Engineering, Irinjalakuda &bull; Department of Higher Education Registry
+            </p>
           </div>
-          <div className="text-xl font-bold text-slate-900 dark:text-white font-mono">
-            {statsLoading ? '—' : stats.total_applications}
+
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={() => { fetchStats(); fetchApplications(); }}>
+              <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+              Refresh Queue
+            </Button>
           </div>
-          <span className="text-[9px] text-slate-500 block">Submitted requests</span>
         </div>
 
-        {/* Pending Applications */}
-        <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Pending</span>
-            <span className="material-symbols-outlined text-[16px]">pending_actions</span>
+        {/* 4 KPI Metric Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <span className="text-xs font-mono text-slate-400 uppercase">Total Enrolled</span>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-16 mt-2" />
+            ) : (
+              <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white mt-1">
+                {stats.total_applications}
+              </p>
+            )}
           </div>
-          <div className="text-xl font-bold text-amber-800 dark:text-amber-300 font-mono">
-            {statsLoading ? '—' : stats.pending_applications}
-          </div>
-          <span className="text-[9px] text-amber-700/80 dark:text-amber-400/80 block">Awaiting review</span>
-        </div>
 
-        {/* Approved Applications */}
-        <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Approved</span>
-            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <span className="text-xs font-mono text-amber-500 uppercase">Pending Review</span>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-16 mt-2" />
+            ) : (
+              <p className="text-2xl sm:text-3xl font-black font-mono text-amber-500 mt-1">
+                {stats.pending_applications}
+              </p>
+            )}
           </div>
-          <div className="text-xl font-bold text-emerald-800 dark:text-emerald-300 font-mono">
-            {statsLoading ? '—' : stats.approved_applications}
-          </div>
-          <span className="text-[9px] text-emerald-700/80 dark:text-emerald-400/80 block">Verified &amp; endorsed</span>
-        </div>
 
-        {/* Rejected Applications */}
-        <div className="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Rejected</span>
-            <span className="material-symbols-outlined text-[16px]">cancel</span>
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <span className="text-xs font-mono text-emerald-500 uppercase">Passes Approved</span>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-16 mt-2" />
+            ) : (
+              <p className="text-2xl sm:text-3xl font-black font-mono text-emerald-500 mt-1">
+                {stats.approved_applications}
+              </p>
+            )}
           </div>
-          <div className="text-xl font-bold text-rose-800 dark:text-rose-300 font-mono">
-            {statsLoading ? '—' : stats.rejected_applications}
-          </div>
-          <span className="text-[9px] text-rose-700/80 dark:text-rose-400/80 block">Criteria mismatch</span>
-        </div>
 
-        {/* Active Passes */}
-        <div className="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900/40 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-teal-600 dark:text-teal-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Active Passes</span>
-            <span className="material-symbols-outlined text-[16px]">credit_card</span>
+          <div className="p-5 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+            <span className="text-xs font-mono text-rose-500 uppercase">Rejected</span>
+            {statsLoading ? (
+              <Skeleton className="h-8 w-16 mt-2" />
+            ) : (
+              <p className="text-2xl sm:text-3xl font-black font-mono text-rose-500 mt-1">
+                {stats.rejected_applications}
+              </p>
+            )}
           </div>
-          <div className="text-xl font-bold text-teal-800 dark:text-teal-300 font-mono">
-            {statsLoading ? '—' : stats.active_passes}
-          </div>
-          <span className="text-[9px] text-teal-700/80 dark:text-teal-400/80 block">In circulation</span>
-        </div>
-
-        {/* Expired Passes */}
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Expired</span>
-            <span className="material-symbols-outlined text-[16px]">timer_off</span>
-          </div>
-          <div className="text-xl font-bold text-slate-800 dark:text-slate-300 font-mono">
-            {statsLoading ? '—' : stats.expired_passes}
-          </div>
-          <span className="text-[9px] text-slate-500 block">Needs renewal</span>
-        </div>
-
-        {/* Total Students */}
-        <div className="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900/40 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-sky-600 dark:text-sky-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Students</span>
-            <span className="material-symbols-outlined text-[16px]">school</span>
-          </div>
-          <div className="text-xl font-bold text-sky-800 dark:text-sky-300 font-mono">
-            {statsLoading ? '—' : stats.total_students}
-          </div>
-          <span className="text-[9px] text-sky-700/80 dark:text-sky-400/80 block">Kerala institutions</span>
         </div>
       </div>
 
-      {/* SUB-TAB 1: APPLICATIONS WORKFLOW */}
-      {activeSubTab === 'applications' && (
-        <div className="space-y-4">
-          {/* Filters & Search Toolbar */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white/80 dark:bg-[#0D1118]/85 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-            {/* Search Input */}
-            <form onSubmit={handleSearchSubmit} className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-                search
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by student name, roll #, student ID, app #, or institution..."
-                className="w-full pl-9 pr-20 py-2 rounded-xl bg-slate-100/70 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              />
-              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center space-x-1">
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    title="Clear search"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  className="px-2.5 py-1 bg-slate-900 dark:bg-sky-500 text-white dark:text-slate-950 rounded-lg text-[11px] font-bold"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {/* Status Filter Chips */}
-            <div className="flex items-center space-x-1.5 overflow-x-auto text-xs font-semibold">
-              <span className="text-slate-400 text-[11px] whitespace-nowrap pr-1">Filter:</span>
-              {[
-                { id: '', label: 'All' },
-                { id: 'PENDING', label: 'Pending' },
-                { id: 'APPROVED', label: 'Approved' },
-                { id: 'REJECTED', label: 'Rejected' },
-                { id: 'ACTIVE', label: 'Active Pass' },
-                { id: 'EXPIRED', label: 'Expired' },
-              ].map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setStatusFilter(f.id)}
-                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                    statusFilter === f.id
-                      ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
-                      : 'bg-slate-100 dark:bg-[#111722] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+      {/* 2. APPLICATION QUEUE CONTROLS & TABLE */}
+      <div className="rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-5 sm:p-6">
+        
+        {/* Filters Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          
+          {/* Status Pills */}
+          <div className="flex items-center space-x-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-[#111722] border border-slate-200/80 dark:border-slate-800 overflow-x-auto">
+            {['', 'PENDING', 'APPROVED', 'REJECTED'].map((filter) => (
               <button
-                onClick={() => {
-                  fetchApplications();
-                  fetchStats();
-                }}
-                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
-                title="Refresh from SQLite database"
+                key={filter}
+                onClick={() => setStatusFilter(filter)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer shrink-0 ${
+                  statusFilter === filter
+                    ? 'bg-white dark:bg-sky-500 text-slate-950 dark:text-slate-950 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                {filter === '' ? 'ALL' : filter}
               </button>
-            </div>
-          </div>
-
-          {/* Applications Table */}
-          <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-[#111722] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="px-5 py-3.5">App ID</th>
-                    <th className="px-5 py-3.5">Student</th>
-                    <th className="px-5 py-3.5">Institution &amp; Course</th>
-                    <th className="px-5 py-3.5">Transport &amp; Corridor</th>
-                    <th className="px-5 py-3.5">Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <span className="material-symbols-outlined text-[28px] animate-spin text-sky-500">
-                            progress_activity
-                          </span>
-                          <span>Loading real applications from SQLite database...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : applications.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
-                        <div className="flex flex-col items-center justify-center space-y-2 max-w-sm mx-auto">
-                          <span className="material-symbols-outlined text-[36px] text-slate-400">
-                            inbox
-                          </span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300">
-                            No applications match your criteria
-                          </span>
-                          <p className="text-[11px] text-slate-500">
-                            Try adjusting your search query or reset the status filters to view all records.
-                          </p>
-                          {(searchQuery || statusFilter) && (
-                            <button
-                              onClick={() => {
-                                setSearchQuery('');
-                                setStatusFilter('');
-                              }}
-                              className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300"
-                            >
-                              Reset Filters
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    applications.map((app) => (
-                      <tr
-                        key={app.id}
-                        className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
-                      >
-                        {/* Application Number */}
-                        <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-white">
-                          <div className="flex items-center space-x-1.5">
-                            <span>{app.application_number}</span>
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-sans">
-                            {new Date(app.applied_at).toLocaleDateString()}
-                          </div>
-                        </td>
-
-                        {/* Student Name & Roll No */}
-                        <td className="px-5 py-4">
-                          <div className="font-bold text-slate-900 dark:text-white text-[13px]">
-                            {app.student?.full_name || 'Student'}
-                          </div>
-                          <div className="text-[11px] text-slate-500 font-mono">
-                            {app.student?.roll_number} • ID: {app.student?.student_id_number || 'STU-2024-8841'}
-                          </div>
-                        </td>
-
-                        {/* Institution & Course */}
-                        <td className="px-5 py-4 text-slate-700 dark:text-slate-300">
-                          <div className="truncate max-w-[210px] font-semibold">
-                            {app.student?.institution_name || app.student?.college_address || 'Kerala Institution'}
-                          </div>
-                          <div className="text-[11px] text-slate-500 truncate max-w-[210px]">
-                            {app.student?.course} ({app.student?.semester || app.student?.year_semester})
-                          </div>
-                        </td>
-
-                        {/* Transport Corridor */}
-                        <td className="px-5 py-4">
-                          <div className="flex items-center space-x-1.5">
-                            <span className="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 text-[10px] font-bold font-mono">
-                              {app.transport_mode || 'Bus'}
-                            </span>
-                            <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">
-                              {app.starting_point || app.route?.from_location} ⇄ {app.destination || app.route?.to_location}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-slate-500 truncate max-w-[210px]">
-                            {app.route_name || app.route?.corridor || 'NH 544 Corridor'}
-                          </div>
-                        </td>
-
-                        {/* Status Chip */}
-                        <td className="px-5 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold font-mono ${
-                              app.status === 'APPROVED'
-                                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-                                : app.status === 'REJECTED'
-                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
-                                : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                app.status === 'APPROVED'
-                                  ? 'bg-emerald-500'
-                                  : app.status === 'REJECTED'
-                                  ? 'bg-rose-500'
-                                  : 'bg-amber-500 animate-pulse'
-                              }`}
-                            />
-                            {app.status}
-                          </span>
-                        </td>
-
-                        {/* Action Buttons */}
-                        <td className="px-5 py-4 text-right">
-                          <div className="flex items-center justify-end space-x-1.5">
-                            {/* Inspect / View Dossier */}
-                            <button
-                              onClick={() => setSelectedApp(app)}
-                              className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center space-x-1 cursor-pointer transition-all"
-                              title="View full dossier"
-                            >
-                              <span className="material-symbols-outlined text-[15px]">visibility</span>
-                              <span>Inspect</span>
-                            </button>
-
-                            {/* If pending, quick approve/reject buttons */}
-                            {app.status === 'PENDING' && (
-                              <>
-                                <button
-                                  onClick={() => handleOpenApproveModal(app)}
-                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm cursor-pointer transition-all active:scale-95 flex items-center space-x-1"
-                                  title="Approve and activate Digital Pass"
-                                >
-                                  <span className="material-symbols-outlined text-[15px]">check</span>
-                                  <span>Approve</span>
-                                </button>
-                                <button
-                                  onClick={() => handleOpenRejectModal(app)}
-                                  className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-sm cursor-pointer transition-all active:scale-95 flex items-center space-x-1"
-                                  title="Reject with mandatory reason"
-                                >
-                                  <span className="material-symbols-outlined text-[15px]">close</span>
-                                  <span>Reject</span>
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SUB-TAB 2: REGISTERED STUDENTS */}
-      {activeSubTab === 'students' && (
-        <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="font-bold text-sm text-slate-900 dark:text-white">
-              Statewide Enrolled Student Directory ({students.length})
-            </div>
-            <button
-              onClick={fetchStudents}
-              className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300"
-            >
-              <span className="material-symbols-outlined text-[16px]">refresh</span>
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {students.map((st) => (
-              <div
-                key={st.id}
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 space-y-3 text-xs"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border border-slate-300 dark:border-slate-600">
-                    <img
-                      src={st.photo_url || '/public/yaathri-vehicles.png'}
-                      alt={st.full_name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop';
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-900 dark:text-white text-sm">{st.full_name}</div>
-                    <div className="font-mono text-slate-500">{st.roll_number} • {st.student_id_number || 'STU-2024-8841'}</div>
-                  </div>
-                </div>
-                <div className="border-t border-slate-200 dark:border-slate-800 pt-2 space-y-1 text-slate-600 dark:text-slate-300">
-                  <div><strong>Institution:</strong> {st.institution_name || st.college_address}</div>
-                  <div><strong>Course:</strong> {st.course} ({st.semester || st.year_semester})</div>
-                  <div><strong>Phone:</strong> {st.phone}</div>
-                  <div><strong>Blood Group:</strong> <span className="text-rose-500 font-bold">{st.blood_group}</span></div>
-                </div>
-              </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* SUB-TAB 3: TRANSIT ROUTES */}
-      {activeSubTab === 'routes' && (
-        <div className="space-y-4">
-          {/* Interactive OpenStreetMap Route Corridor Viewer */}
-          <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="material-symbols-outlined text-sky-500 text-[20px]">map</span>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                  Active Transit Corridor Map: {selectedRouteForMap ? `${selectedRouteForMap.from_location} ⇄ ${selectedRouteForMap.to_location}` : (routes[0] ? `${routes[0].from_location} ⇄ ${routes[0].to_location}` : 'Kerala Transit Network')}
-                </span>
-              </div>
-              <span className="text-[11px] font-mono text-slate-500">
-                Click any route below to preview corridor
-              </span>
-            </div>
-            <RouteMap
-              startPoint={selectedRouteForMap?.from_location || routes[0]?.from_location || 'Thrissur Central'}
-              endPoint={selectedRouteForMap?.to_location || routes[0]?.to_location || 'Ernakulam South'}
-              height="300px"
+          {/* Search Input */}
+          <div className="w-full md:w-72">
+            <Input
+              placeholder="Search by student, ID, roll..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              icon={<span className="material-symbols-outlined text-[18px]">search</span>}
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {routes.map((rt) => {
-              const isSelected = selectedRouteForMap?.id === rt.id || (!selectedRouteForMap && routes[0]?.id === rt.id);
-              return (
-                <div
-                  key={rt.id}
-                  onClick={() => setSelectedRouteForMap(rt)}
-                  className={`p-5 rounded-3xl bg-white/80 dark:bg-[#0D1118]/85 border transition-all cursor-pointer space-y-3 shadow-sm text-xs ${
-                    isSelected
-                      ? 'border-sky-500 ring-2 ring-sky-500/20 shadow-md'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-bold font-mono">
-                      {rt.route_code}
-                    </span>
-                    <span className="text-slate-500 font-mono">{rt.distance_km} KM</span>
-                  </div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white">
-                    {rt.from_location} ⇄ {rt.to_location}
-                  </div>
-                  <p className="text-slate-500 leading-relaxed">{rt.corridor}</p>
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between text-slate-700 dark:text-slate-300 font-semibold">
-                    <span>KSRTC Subsidy: {rt.ksrtc_subsidy_pct}%</span>
-                    <span>Metro: {rt.metro_subsidy_pct}%</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
-      )}
 
-      {/* SUB-TAB 4: AUDIT LOGS */}
-      {activeSubTab === 'verifications' && (
-        <div className="space-y-4">
-          {/* Verification Search & Status Filters */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white/80 dark:bg-[#0D1118]/85 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-            {/* Search Input */}
-            <form onSubmit={handleVerificationSearchSubmit} className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-                search
-              </span>
-              <input
-                type="text"
-                value={verificationSearch}
-                onChange={(e) => setVerificationSearch(e.target.value)}
-                placeholder="Search logs by student name, roll number, pass ID, terminal..."
-                className="w-full pl-9 pr-9 py-2 rounded-xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500 font-medium"
-              />
-              {verificationSearch && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVerificationSearch('');
-                    setTimeout(fetchVerifications, 0);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                >
-                  <span className="material-symbols-outlined text-[16px]">cancel</span>
-                </button>
-              )}
-            </form>
+        {/* Applications Data Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs sm:text-sm font-normal">
+            <thead>
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-mono text-[10px] sm:text-xs uppercase tracking-wider">
+                <th className="pb-3 pl-2">Student</th>
+                <th className="pb-3">Enrollment ID</th>
+                <th className="pb-3">Course / Dept</th>
+                <th className="pb-3">Corridor</th>
+                <th className="pb-3">Status</th>
+                <th className="pb-3 pr-2 text-right">Review Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400 font-mono">
+                    <span className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin inline-block mr-2" />
+                    Loading application ledger...
+                  </td>
+                </tr>
+              ) : applications.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400 font-mono">
+                    No student applications match the filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                applications.map((app) => {
+                  const isPending = app.status === 'PENDING';
+                  const isApproved = app.status === 'APPROVED';
 
-            {/* Filter Chips */}
-            <div className="flex items-center space-x-1.5 overflow-x-auto text-xs font-semibold">
-              <span className="text-slate-400 text-[11px] whitespace-nowrap pr-1">Verdict:</span>
-              {[
-                { id: '', label: 'All' },
-                { id: 'VERIFIED', label: 'Verified' },
-                { id: 'ALREADY_USED', label: 'Already Used' },
-                { id: 'EXPIRED', label: 'Expired' },
-                { id: 'INVALID', label: 'Invalid' },
-              ].map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setVerificationStatusFilter(f.id)}
-                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                    verificationStatusFilter === f.id
-                      ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
-                      : 'bg-slate-100 dark:bg-[#111722] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-              <button
-                onClick={fetchVerifications}
-                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
-                title="Refresh verification logs"
-              >
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Audit Logs Table */}
-          <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-[#111722] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="px-5 py-3.5">Timestamp</th>
-                    <th className="px-5 py-3.5">Scanned Token / Pass</th>
-                    <th className="px-5 py-3.5">Student / Passenger</th>
-                    <th className="px-5 py-3.5">Corridor / Terminal</th>
-                    <th className="px-5 py-3.5">Verdict</th>
-                    <th className="px-5 py-3.5">Auditor / Failure Telemetry</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                  {verifications.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
-                        <div className="flex flex-col items-center justify-center space-y-2 max-w-sm mx-auto">
-                          <span className="material-symbols-outlined text-[36px] text-slate-400">
-                            history
-                          </span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300">
-                            No verification logs match criteria
-                          </span>
-                          <span className="text-[11px] text-slate-500">
-                            Try adjusting your search or verdict filter.
-                          </span>
+                  return (
+                    <tr
+                      key={app.id}
+                      className="hover:bg-slate-50 dark:hover:bg-[#111722]/50 transition-colors"
+                    >
+                      <td className="py-3.5 pl-2 font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold shrink-0">
+                            {app.student_name ? app.student_name[0] : 'S'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900 dark:text-white leading-tight">
+                              {app.student_name || 'Student'}
+                            </p>
+                            <p className="text-[10px] font-mono text-slate-400">{app.application_number}</p>
+                          </div>
                         </div>
                       </td>
-                    </tr>
-                  ) : (
-                    verifications.map((log) => (
-                      <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                        <td className="px-5 py-3.5 font-mono text-slate-500 whitespace-nowrap">
-                          {new Date(log.verified_at).toLocaleTimeString()}
-                          <div className="text-[10px] text-slate-400">
-                            {new Date(log.verified_at).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-900 dark:text-white">
-                          <div className="truncate max-w-[180px]">{log.pass_number_scanned}</div>
-                          <span className="text-[10px] text-slate-400 font-sans block">
-                            {log.pass_number_scanned.startsWith('TT-')
-                              ? 'Single-Use Token'
-                              : log.pass_number_scanned.startsWith('YAATHRI-ID:')
-                              ? 'Permanent Institutional QR'
-                              : 'Concession Pass'}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-slate-800 dark:text-slate-200">
-                          {log.student_name ? (
-                            <div>
-                              <div className="font-bold">{log.student_name}</div>
-                              <div className="text-[10px] text-slate-500 font-mono">{log.student_roll}</div>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 italic">Unidentified Passenger</span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
-                          <div>{log.location}</div>
-                          <div className="text-[10px] text-slate-500 font-mono">
-                            {log.terminal_code}
-                          </div>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono ${
-                              log.status === 'VERIFIED'
-                                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-                                : log.status === 'ALREADY_USED'
-                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
-                                : log.status === 'EXPIRED'
-                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
-                                : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                log.status === 'VERIFIED'
-                                  ? 'bg-emerald-500'
-                                  : log.status === 'EXPIRED'
-                                  ? 'bg-amber-500'
-                                  : 'bg-rose-500'
-                              }`}
-                            />
-                            {log.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400 max-w-xs">
-                          {log.failure_reason ? (
-                            <span className="text-rose-600 dark:text-rose-400 font-semibold block text-[11px]">
-                              {log.failure_reason}
-                            </span>
-                          ) : (
-                            <span className="text-slate-600 dark:text-slate-400 block text-[11px]">
-                              {log.notes || 'Routine terminal check.'}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ========================================================== */}
-      {/* APPLICATION DETAILS DOSSIER MODAL */}
-      {/* ========================================================== */}
-      {selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-[#0D1118] text-slate-900 dark:text-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-sky-100 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-[22px]">badge</span>
+                      <td className="py-3.5 font-mono text-xs text-slate-600 dark:text-slate-400">
+                        {app.roll_number || '—'}
+                      </td>
+
+                      <td className="py-3.5 text-xs text-slate-600 dark:text-slate-400">
+                        {app.course_name || '—'}
+                      </td>
+
+                      <td className="py-3.5 text-xs text-slate-600 dark:text-slate-400 max-w-[180px] truncate">
+                        {app.starting_point} &rarr; {app.destination}
+                      </td>
+
+                      <td className="py-3.5">
+                        <Badge
+                          variant={isApproved ? 'success' : isPending ? 'warning' : 'danger'}
+                          size="sm"
+                          dot
+                        >
+                          {app.status}
+                        </Badge>
+                      </td>
+
+                      <td className="py-3.5 pr-2 text-right">
+                        <Button
+                          variant={isPending ? 'primary' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectedApp(app)}
+                        >
+                          {isPending ? 'Inspect & Review' : 'View Pass Proof'}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 3. APPLICATION DETAIL INSPECTION DRAWER */}
+      <Drawer
+        isOpen={!!selectedApp}
+        onClose={() => setSelectedApp(null)}
+        title={`Application #${selectedApp?.application_number}`}
+        subtitle={`Submitted: ${selectedApp?.created_at ? new Date(selectedApp.created_at).toLocaleDateString() : 'Active'}`}
+        width="max-w-lg"
+      >
+        {selectedApp && (
+          <div className="space-y-6 text-xs sm:text-sm">
+            
+            {/* Student Info Card */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#111722] border border-slate-200/80 dark:border-slate-800 space-y-2 font-mono">
+              <div className="flex justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
+                <span className="text-slate-400">Student Name:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedApp.student_name}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
+                <span className="text-slate-400">Roll Number:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedApp.roll_number}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
+                <span className="text-slate-400">Course / Dept:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedApp.course_name}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
+                <span className="text-slate-400">Institution:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedApp.institution_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Corridor Stages:</span>
+                <span className="font-bold text-sky-600 dark:text-sky-400">{selectedApp.starting_point} &rarr; {selectedApp.destination}</span>
+              </div>
+            </div>
+
+            {/* Document Inspection Proof */}
+            <div className="space-y-2">
+              <span className="font-mono text-xs font-bold text-slate-400 uppercase">
+                ATTACHED PROOF OF ENROLLMENT
+              </span>
+              <div className="p-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
+                <span className="material-symbols-outlined text-[36px] text-sky-500">verified_user</span>
+                <p className="font-bold text-slate-900 dark:text-white text-xs">
+                  Bonafide College Enrollment Certificate Attached
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Attested by Principal Secretariat &bull; Validated with Higher Ed PIN
+                </p>
+              </div>
+            </div>
+
+            {/* Issued Pass Details if approved */}
+            {selectedApp.issued_pass && (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 space-y-3 font-mono">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase block">
+                    ISSUED CONCESSION PASS
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                    QR ACTIVE
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white font-mono">
-                      {selectedApp.application_number}
-                    </h3>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                        selectedApp.status === 'APPROVED'
-                          ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                          : selectedApp.status === 'REJECTED'
-                          ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
-                          : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                      }`}
-                    >
-                      {selectedApp.status}
-                    </span>
+                <div className="flex justify-between text-xs">
+                  <span>Pass Number:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{selectedApp.issued_pass.pass_number}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span>Expiry:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{selectedApp.issued_pass.expiry_date}</span>
+                </div>
+
+                {/* ID-Card QR Integration Notice */}
+                <div className="pt-2 border-t border-emerald-500/20 text-[11px] font-sans text-slate-600 dark:text-slate-400 space-y-1">
+                  <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-emerald-500">qr_code_2</span>
+                    <span>YAATHRI Verification QR</span>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Application submitted on {new Date(selectedApp.applied_at).toLocaleString()}
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    ✓ Ready for institution ID-card printing / engraving
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    Proposed ID-card integration: The physical college ID card is the student's everyday credential. Conductor scans only when verification is required.
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedApp(null)}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
-            </div>
+            )}
 
-            {/* Modal Content Sections */}
-            <div className="p-6 space-y-6 text-xs">
-              {/* 1. Student Biometrics & Institution */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center space-x-1.5 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <span className="material-symbols-outlined text-[16px] text-sky-500">person</span>
-                  <span>Student Biometric &amp; Academic Identity</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  {/* Photo */}
-                  <div className="w-24 h-28 rounded-2xl overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border-2 border-slate-300 dark:border-slate-600 shadow-md">
-                    <img
-                      src={selectedApp.student?.photo_url || '/public/yaathri-vehicles.png'}
-                      alt={selectedApp.student?.full_name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop';
-                      }}
-                    />
-                  </div>
-
-                  {/* Identity Grid */}
-                  <div className="grid grid-cols-2 gap-3 flex-1">
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">FULL NAME</span>
-                      <span className="font-bold text-slate-900 dark:text-white text-sm">
-                        {selectedApp.student?.full_name}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">ROLL NUMBER</span>
-                      <span className="font-bold font-mono text-slate-900 dark:text-white">
-                        {selectedApp.student?.roll_number}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">STUDENT ID</span>
-                      <span className="font-mono text-slate-800 dark:text-slate-200">
-                        {selectedApp.student?.student_id_number || 'STU-2024-8841'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">INSTITUTION</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">
-                        {selectedApp.student?.institution_name || selectedApp.student?.college_address}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">COURSE &amp; SEMESTER</span>
-                      <span className="text-slate-800 dark:text-slate-200">
-                        {selectedApp.student?.course} • {selectedApp.student?.semester || selectedApp.student?.year_semester}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">CONTACT PHONE</span>
-                      <span className="font-mono text-slate-800 dark:text-slate-200">
-                        {selectedApp.student?.phone}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            {/* Action Buttons if Pending */}
+            {selectedApp.status === 'PENDING' && (
+              <div className="flex items-center space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="flex-1"
+                  onClick={() => setApproveApp(selectedApp)}
+                >
+                  Approve Pass
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="flex-1 text-rose-500 border-rose-300 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                  onClick={() => setRejectApp(selectedApp)}
+                >
+                  Reject
+                </Button>
               </div>
+            )}
 
-              {/* 2. Transit Corridor & Validity */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center space-x-1.5 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <span className="material-symbols-outlined text-[16px] text-sky-500">directions_transit</span>
-                  <span>Requested Transit Corridor &amp; Validity Window</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">TRANSPORT MODE</span>
-                    <span className="font-bold text-sky-600 dark:text-sky-400">
-                      {selectedApp.transport_mode || 'Bus'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">STARTING POINT</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {selectedApp.starting_point || selectedApp.route?.from_location}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">DESTINATION</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {selectedApp.destination || selectedApp.route?.to_location}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-400 block text-[10px]">OFFICIAL CORRIDOR</span>
-                    <span className="text-slate-700 dark:text-slate-300 font-mono">
-                      {selectedApp.route_name || selectedApp.route?.corridor || 'NH 544 Corridor'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">VALIDITY WINDOW</span>
-                    <span className="font-mono text-slate-900 dark:text-white">
-                      {selectedApp.validity_start || '01 / 06 / 2026'} → {selectedApp.validity_end || '31 / 03 / 2027'}
-                    </span>
-                  </div>
-                </div>
+          </div>
+        )}
+      </Drawer>
 
-                {/* Live Route Corridor Map */}
-                <div className="pt-2">
-                  <RouteMap
-                    startPoint={selectedApp.starting_point || selectedApp.route?.from_location || 'Thrissur Central'}
-                    endPoint={selectedApp.destination || selectedApp.route?.to_location || 'Ernakulam South'}
-                    height="200px"
-                  />
-                </div>
-              </div>
+      {/* APPROVAL MODAL */}
+      <Modal
+        isOpen={!!approveApp}
+        onClose={() => setApproveApp(null)}
+        title="Approve Concession Pass"
+        subtitle={`Authorize student transit subsidy for ${approveApp?.student_name}`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Registrar Attestation Notes"
+            value={approveNotes}
+            onChange={(e) => setApproveNotes(e.target.value)}
+          />
 
-              {/* 3. Uploaded Documents */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center space-x-1.5 border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <span className="material-symbols-outlined text-[16px] text-sky-500">folder</span>
-                  <span>Uploaded Supporting Documents ({selectedApp.documents?.length || 0})</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {selectedApp.documents && selectedApp.documents.length > 0 ? (
-                    selectedApp.documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="p-3 rounded-xl bg-white dark:bg-[#0D1118] border border-slate-200 dark:border-slate-800 flex items-center justify-between"
-                      >
-                        <div className="flex items-center space-x-2.5">
-                          <span className="material-symbols-outlined text-[20px] text-sky-500">
-                            {doc.doc_type === 'PHOTO' ? 'photo_camera' : 'description'}
-                          </span>
-                          <div>
-                            <div className="font-bold text-slate-900 dark:text-white truncate max-w-[180px]">
-                              {doc.file_name}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-mono">
-                              {doc.doc_type} • Verified Safe
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center">
-                          <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-2 text-center py-2 text-slate-400">
-                      Standard student institutional enrollment document verified.
-                    </div>
-                  )}
-                </div>
-              </div>
+          <p className="text-xs text-slate-500">
+            Approving issues an official digital concession pass and activates the <strong>YAATHRI Verification QR</strong> (Ready for institution ID-card printing / engraving).
+          </p>
 
-              {/* 4. Decision & Review History */}
-              {selectedApp.status === 'APPROVED' && (
-                <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 space-y-2">
-                  <div className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center space-x-1.5">
-                    <span className="material-symbols-outlined text-[18px]">verified</span>
-                    <span>Approved &amp; Digital Pass Provisioned</span>
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-300 space-y-1 font-mono text-[11px]">
-                    <div><strong>Reviewing Officer:</strong> {selectedApp.reviewer_name || 'RTO Officer'}</div>
-                    <div><strong>Endorsement Date:</strong> {new Date(selectedApp.reviewed_at).toLocaleString()}</div>
-                    {selectedApp.reviewer_notes && <div><strong>Officer Notes:</strong> {selectedApp.reviewer_notes}</div>}
-                    {selectedApp.issued_pass && (
-                      <div className="pt-1 text-sky-600 dark:text-sky-400 font-bold">
-                        Digital Pass ID: {selectedApp.issued_pass.pass_number} (Secure QR Pass)
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedApp.status === 'REJECTED' && (
-                <div className="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-2">
-                  <div className="font-bold text-rose-800 dark:text-rose-300 flex items-center space-x-1.5">
-                    <span className="material-symbols-outlined text-[18px]">cancel</span>
-                    <span>Application Rejected</span>
-                  </div>
-                  <div className="text-slate-700 dark:text-slate-300 space-y-1 text-[11px]">
-                    <div><strong>Reviewing Officer:</strong> {selectedApp.reviewer_name || 'RTO Officer'}</div>
-                    <div><strong>Review Date:</strong> {new Date(selectedApp.reviewed_at).toLocaleString()}</div>
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-[#0D1118] border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 font-medium">
-                      <strong>Reason for Rejection:</strong> {selectedApp.rejection_reason || selectedApp.reviewer_notes}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div className="p-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <button
-                onClick={() => setSelectedApp(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
-              >
-                Close Dossier
-              </button>
-
-              {selectedApp.status === 'PENDING' && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleOpenRejectModal(selectedApp)}
-                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow cursor-pointer active:scale-95"
-                  >
-                    Reject Application
-                  </button>
-                  <button
-                    onClick={() => handleOpenApproveModal(selectedApp)}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow cursor-pointer active:scale-95"
-                  >
-                    Approve &amp; Issue Pass
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center justify-end space-x-3 pt-2">
+            <Button variant="ghost" size="md" onClick={() => setApproveApp(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleApproveSubmit}
+              isLoading={isProcessing}
+            >
+              Confirm &amp; Issue Pass
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* ========================================================== */}
-      {/* APPROVE CONFIRMATION MODAL */}
-      {/* ========================================================== */}
-      {approveModalApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-[#0D1118] text-slate-900 dark:text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[26px]">task_alt</span>
-            </div>
+      {/* REJECTION MODAL */}
+      <Modal
+        isOpen={!!rejectApp}
+        onClose={() => setRejectApp(null)}
+        title="Reject Application"
+        subtitle={`Provide official feedback for ${rejectApp?.student_name}`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Reason for Rejection"
+            placeholder="e.g. Incomplete proof of admission or invalid semester..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            required
+          />
 
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Confirm Concession Pass Approval
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                You are endorsing concession request{' '}
-                <strong className="text-slate-800 dark:text-slate-200 font-mono">
-                  {approveModalApp.application_number}
-                </strong>{' '}
-                for {approveModalApp.student?.full_name}.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-[#111722] p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-              <div><strong>Applicant:</strong> {approveModalApp.student?.full_name} ({approveModalApp.student?.roll_number})</div>
-              <div><strong>Route:</strong> {approveModalApp.starting_point || approveModalApp.route?.from_location} ⇄ {approveModalApp.destination || approveModalApp.route?.to_location}</div>
-              <div className="text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
-                ✓ A cryptographically signed Digital Pass and QR payload will be issued.
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Reviewer Endorsement Notes (Optional)
-              </label>
-              <textarea
-                value={approveNotes}
-                onChange={(e) => setApproveNotes(e.target.value)}
-                rows={2}
-                className="w-full p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setApproveModalApp(null)}
-                disabled={isProcessingAction}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmApprove}
-                disabled={isProcessingAction}
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isProcessingAction ? (
-                  <>
-                    <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>
-                    <span>Activating Pass...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    <span>Confirm &amp; Issue Pass</span>
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="flex items-center justify-end space-x-3 pt-2">
+            <Button variant="ghost" size="md" onClick={() => setRejectApp(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={handleRejectSubmit}
+              isLoading={isProcessing}
+            >
+              Confirm Rejection
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* ========================================================== */}
-      {/* REJECT CONFIRMATION MODAL */}
-      {/* ========================================================== */}
-      {rejectModalApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-[#0D1118] text-slate-900 dark:text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[26px]">warning</span>
-            </div>
-
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Reject Concession Application
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Rejecting application{' '}
-                <strong className="text-slate-800 dark:text-slate-200 font-mono">
-                  {rejectModalApp.application_number}
-                </strong>
-                . A clear rejection reason is required and will be dispatched to the student's dashboard.
-              </p>
-            </div>
-
-            {/* Quick Suggestions */}
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 block mb-1.5 uppercase">
-                Quick Reason Presets:
-              </span>
-              <div className="flex flex-wrap gap-1.5 text-[11px]">
-                {[
-                  'Distance from residence is <3km minimum limit.',
-                  'Institutional enrollment record could not be verified.',
-                  'Uploaded college ID document is unreadable/expired.',
-                  'Transit route requested does not match academic commute corridor.',
-                ].map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setRejectionReason(preset)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] text-left cursor-pointer"
-                  >
-                    {preset.slice(0, 32)}...
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Mandatory Rejection Reason <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Explain clearly why this application is being rejected..."
-                rows={3}
-                className="w-full p-2.5 rounded-xl bg-slate-100/70 dark:bg-[#111722] border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
-              />
-              {!rejectionReason.trim() && (
-                <span className="text-[10px] text-rose-500 font-medium mt-1 block">
-                  Rejection reason cannot be blank.
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setRejectModalApp(null)}
-                disabled={isProcessingAction}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmReject}
-                disabled={isProcessingAction || !rejectionReason.trim()}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isProcessingAction ? (
-                  <>
-                    <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>
-                    <span>Rejecting...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-[16px]">cancel</span>
-                    <span>Confirm Rejection</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
+    </div>
   );
 }

@@ -8,40 +8,40 @@ import React from 'react';
  */
 export default function ConcessionCardBack({ studentData }) {
   return (
-    <div className="w-full h-full bg-white text-[#081b2e] rounded-3xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.35)] relative select-none">
+    <div className="w-full h-full bg-white text-[#081b2e] rounded-3xl p-3.5 sm:p-6 flex flex-col justify-between overflow-hidden border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.35)] relative select-none">
       {/* TOP HEADER: STUDENT INFORMATION BANNER */}
-      <div className="relative z-10 w-full bg-[#081b2e] rounded-xl py-2 px-4 text-center shadow-sm">
-        <h2 className="text-white text-xs sm:text-sm font-black tracking-[0.25em] uppercase">
+      <div className="relative z-10 w-full bg-[#081b2e] rounded-xl py-1.5 sm:py-2 px-3 sm:px-4 text-center shadow-sm">
+        <h2 className="text-white text-[11px] sm:text-sm font-black tracking-[0.25em] uppercase">
           STUDENT INFORMATION
         </h2>
       </div>
 
       {/* SECTION 1: STUDENT ADDRESS BOX */}
-      <div className="relative z-10 bg-slate-50/70 border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 my-1">
-        <span className="text-[9px] sm:text-[10px] font-black tracking-[0.15em] uppercase text-slate-800 block mb-1">
+      <div className="relative z-10 bg-slate-50/70 border border-slate-200/90 rounded-2xl p-2 sm:p-3 my-0.5 sm:my-1">
+        <span className="text-[8.5px] sm:text-[10px] font-black tracking-[0.15em] uppercase text-slate-800 block mb-0.5 sm:mb-1">
           STUDENT ADDRESS
         </span>
-        <div className="space-y-1 text-[9.5px] sm:text-[10.5px] text-[#081b2e] font-medium leading-relaxed">
+        <div className="space-y-0.5 sm:space-y-1 text-[8.5px] sm:text-[10.5px] text-[#081b2e] font-medium leading-relaxed">
           <div className="border-b border-slate-200/80 pb-0.5">
-            {studentData.studentAddress || 'Flat 4B, Emerald Heights, Mission Quarters'}
+            {studentData?.studentAddress || (studentData?.isSpecimen ? 'Kerala State Student Transit Network' : 'Student Address')}
           </div>
           <div className="border-b border-slate-200/80 pb-0.5">
-            Thrissur Central, Kerala – 680001
+            {studentData?.isSpecimen ? 'Verified Student Pass Registry' : 'Kerala – 680001'}
           </div>
         </div>
       </div>
 
       {/* SECTION 2: COLLEGE / SCHOOL ADDRESS BOX */}
-      <div className="relative z-10 bg-slate-50/70 border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 my-1">
-        <span className="text-[9px] sm:text-[10px] font-black tracking-[0.15em] uppercase text-slate-800 block mb-1">
+      <div className="relative z-10 bg-slate-50/70 border border-slate-200/90 rounded-2xl p-2 sm:p-3 my-0.5 sm:my-1">
+        <span className="text-[8.5px] sm:text-[10px] font-black tracking-[0.15em] uppercase text-slate-800 block mb-0.5 sm:mb-1">
           COLLEGE / SCHOOL ADDRESS
         </span>
-        <div className="space-y-1 text-[9.5px] sm:text-[10.5px] text-[#081b2e] font-medium leading-relaxed">
+        <div className="space-y-0.5 sm:space-y-1 text-[8.5px] sm:text-[10.5px] text-[#081b2e] font-medium leading-relaxed">
           <div className="border-b border-slate-200/80 pb-0.5">
-            {studentData.collegeAddress || 'Christ College of Engineering, Irinjalakuda'}
+            {studentData?.collegeAddress || (studentData?.isSpecimen ? 'Kerala Higher Education Department' : 'College / School Address')}
           </div>
           <div className="border-b border-slate-200/80 pb-0.5">
-            Thrissur District, Kerala – 680125
+            {studentData?.isSpecimen ? 'Recognized Educational Institution' : 'Kerala – 680125'}
           </div>
         </div>
       </div>
@@ -55,13 +55,13 @@ export default function ConcessionCardBack({ studentData }) {
         <div className="grid grid-cols-12 gap-1 items-baseline border-b border-slate-200/80 pb-0.5">
           <span className="col-span-5 font-semibold text-slate-700">Blood Group</span>
           <span className="col-span-1 text-center font-bold text-slate-500">:</span>
-          <span className="col-span-6 font-bold text-red-600">{studentData.bloodGroup || 'O +ve'}</span>
+          <span className="col-span-6 font-bold text-red-600">{studentData?.bloodGroup || (studentData?.isSpecimen ? '—' : 'O +ve')}</span>
         </div>
 
         <div className="grid grid-cols-12 gap-1 items-baseline border-b border-slate-200/80 pb-0.5">
           <span className="col-span-5 font-semibold text-slate-700">Emergency Contact No.</span>
           <span className="col-span-1 text-center font-bold text-slate-500">:</span>
-          <span className="col-span-6 font-bold text-[#081b2e] font-mono">{studentData.emergencyPhone || '+91 94471 98765'}</span>
+          <span className="col-span-6 font-bold text-[#081b2e] font-mono">{studentData?.emergencyPhone || (studentData?.isSpecimen ? '+91 ••••• •••••' : '+91 94471 98765')}</span>
         </div>
 
         <div className="grid grid-cols-12 gap-1 items-baseline border-b border-slate-200/80 pb-0.5">

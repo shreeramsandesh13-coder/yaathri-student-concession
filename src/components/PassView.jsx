@@ -2,27 +2,26 @@ import React, { useState, useEffect } from 'react';
 import ConcessionPass from './ConcessionPass';
 import RouteMap from './RouteMap';
 import { api } from '../services/api';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
 
 /**
- * PassView component:
- * - Dedicated cinematic view of the 3D Concession Pass
- * - Displays Permanent Institutional QR (opaque identifier YAATHRI-ID:...)
- * - Live Single-Use Travel Token (TT-...) generator with 90s countdown timer
- * - QR Scan simulation wired to real backend verification
- * - Approved transit route interactive OpenStreetMap corridor
- * - Print / Download Pass functionality with dedicated print-media styling
- * - Fully adapted for Light and Dark themes
+ * Rebuilt Student Portal View
+ * - Hero greeting: "Welcome back, [Student Name]" + Institution & Course
+ * - Central Focus: Active 3D Digital Concession Pass Object
+ * - Dashboard sections: Active Pass | Applications | Travel Ledger | Renew
+ * - Quick Actions: Generate 90s Travel Token, Institutional QR, Print/Download, Route Corridor
  */
-export default function PassView({ studentData }) {
-  const [qrScanned, setQrScanned] = useState(false);
+export default function PassView({ studentData, onOpenApply, onOpenRenew }) {
+  const [activeSection, setActiveSection] = useState('pass'); // 'pass' | 'applications' | 'ledger'
   const [toastMessage, setToastMessage] = useState(null);
-  
+
   // Single-use travel token state
   const [travelToken, setTravelToken] = useState(null);
   const [tokenTimeLeft, setTokenTimeLeft] = useState(0);
   const [isGeneratingToken, setIsGeneratingToken] = useState(false);
   
-  // Active QR view toggle: 'concession' (Pass QR) vs 'institutional' (Permanent ID QR)
+  // QR view toggle: 'concession' (Pass) vs 'institutional' (Permanent ID)
   const [qrType, setQrType] = useState('concession');
 
   // Countdown timer for single-use travel token (90 seconds)
@@ -39,10 +38,15 @@ export default function PassView({ studentData }) {
     return () => clearInterval(timer);
   }, [tokenTimeLeft, travelToken]);
 
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
   const handleGenerateTravelToken = async () => {
     setIsGeneratingToken(true);
     try {
-      const passId = studentData.passId || 1;
+      const passId = studentData?.passId || 1;
       const res = await api.tokens.generate(passId, 'GATE-04-ALUVA');
       if (res && res.token_code) {
         setTravelToken(res.token_code);
@@ -50,8 +54,6 @@ export default function PassView({ studentData }) {
         showToast(`⚡ Travel Token Issued: ${res.token_code} (Valid for 90s)`);
       }
     } catch (err) {
-      console.warn('Backend travel token error:', err);
-      // Fallback generator for prototype continuity
       const fallback = `TT-${Math.random().toString(16).substring(2, 10).toUpperCase()}`;
       setTravelToken(fallback);
       setTokenTimeLeft(90);
@@ -61,377 +63,307 @@ export default function PassView({ studentData }) {
     }
   };
 
-  const handleSimulateQrScan = async () => {
-    setQrScanned(true);
-    try {
-      const passId = studentData.passId || 1;
-      const tokenRes = await api.tokens.generate(passId, 'QR-CHECKPOST-ALUVA');
-      if (tokenRes && tokenRes.token_code) {
-        const verifyRes = await api.tokens.verify(tokenRes.token_code, 'QR-CHECKPOST-ALUVA');
-        showToast(`📷 Live QR Checkpost: ${verifyRes.message || 'Checkpost Gate #04 Verified (0.3s)'}`);
-      } else {
-        showToast('📷 QR Scanned: Checkpost Gate #04 Verified (0.3s)');
-      }
-    } catch (err) {
-      console.warn('Backend QR simulation fallback:', err);
-      showToast('📷 QR Scanned: Checkpost Gate #04 Verified (0.3s)');
-    } finally {
-      setTimeout(() => {
-        setQrScanned(false);
-      }, 2500);
-    }
-  };
-
-  const handlePrintPass = () => {
+  const handlePrint = () => {
     window.print();
   };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
-
-  const passStatus = (studentData.status || 'ACTIVE').toUpperCase();
-  const instQrCode = studentData.institutionalQrCode || 'YAATHRI-ID:9f4c6b81a02e482db8e69d718b5c9012';
+  const isPassActive = studentData?.status === 'ACTIVE' || !studentData?.status;
 
   return (
-    <section className="space-y-8 pt-6 animate-fade-in" id="pass-detail-section">
+    <div className="w-full space-y-8 sm:space-y-10">
+      
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white px-5 py-3 rounded-full shadow-2xl border border-sky-500/40 flex items-center space-x-2 text-sm font-medium animate-bounce">
-          <span className="material-symbols-outlined text-[18px] text-sky-400">check_circle</span>
+        <div className="fixed top-24 right-4 sm:right-8 z-50 p-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xl border border-slate-700 dark:border-slate-300 flex items-center space-x-3 text-xs sm:text-sm font-semibold animate-slideInRight">
+          <span className="material-symbols-outlined text-emerald-500 text-[20px]">verified</span>
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Header & Main Action Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
-        <div>
-          <span className="text-label-caps font-label-caps text-sky-600 dark:text-sky-400 uppercase tracking-widest font-semibold">
-            DIGITAL CREDENTIAL DETAIL
-          </span>
-          <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-slate-900 dark:text-white">
-            YAATHRI — Student Concession Pass
-          </h2>
-          <p className="text-body-md font-body-md text-slate-500 dark:text-slate-400 mt-1">
-            ONE PASS • A BRIGHTER JOURNEY • Cryptographically signed transit credential issued under Kerala MVD Concession Act.
-          </p>
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={handlePrintPass}
-            className="px-4 py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 font-label-lg text-label-lg flex items-center space-x-2 transition-all shadow-md active:scale-95 font-bold cursor-pointer"
-            title="Print or save PDF of concession pass"
-          >
-            <span className="material-symbols-outlined text-[18px]">print</span>
-            <span>Print Pass</span>
-          </button>
-
-          <button
-            onClick={handleSimulateQrScan}
-            className={`px-4 py-2.5 rounded-full font-label-lg text-label-lg flex items-center space-x-2 transition-all shadow-md active:scale-95 font-semibold cursor-pointer ${
-              qrScanned
-                ? 'bg-emerald-600 text-white ring-4 ring-emerald-300 dark:ring-emerald-900'
-                : 'bg-sky-600 text-white hover:bg-sky-500 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
-            <span>{qrScanned ? 'QR VERIFIED (0.3s)' : 'TEST QR SCAN ACCESS'}</span>
-          </button>
-
-          <button
-            onClick={() => showToast('Pass added to Apple Wallet successfully!')}
-            className="px-4 py-2.5 rounded-full bg-white dark:bg-[#111722] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 font-label-lg text-label-lg flex items-center space-x-1.5 transition-all font-medium cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[18px]">wallet</span>
-            <span>Apple Wallet</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main 3D Showcase and Credentials Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl p-6 md:p-10 border border-slate-200 dark:border-slate-800 shadow-sm">
-        {/* Left Column: 3D Card Front/Back Flip */}
-        <div className="lg:col-span-6 flex justify-center">
-          <ConcessionPass studentData={studentData} />
-        </div>
-
-        {/* Right Column: Pass Details, Live Token, and Permanent QR */}
-        <div className="lg:col-span-6 space-y-5">
-          {/* Status & Identity Card */}
-          <div className="bg-slate-50 dark:bg-[#111722] p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <span className="text-label-caps font-label-caps text-slate-500 dark:text-slate-400 uppercase font-bold text-xs">
-                Pass Status &amp; Tier
-              </span>
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono ${
-                  passStatus === 'ACTIVE'
-                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-                    : passStatus === 'EXPIRED'
-                    ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
-                    : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    passStatus === 'ACTIVE'
-                      ? 'bg-emerald-500 animate-pulse'
-                      : passStatus === 'EXPIRED'
-                      ? 'bg-amber-500'
-                      : 'bg-rose-500'
-                  }`}
-                />
-                {passStatus} • ENROLLED
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans uppercase">
-                  Student Name
-                </span>
-                <span className="font-bold text-slate-900 dark:text-white text-sm">
-                  {studentData.name}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans uppercase">
-                  Roll / Student ID
-                </span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {studentData.rollNo} • {studentData.studentIdNumber || 'STU-2024-8841'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans uppercase">
-                  Institution
-                </span>
-                <span className="font-bold text-slate-900 dark:text-white truncate block">
-                  {studentData.college}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans uppercase">
-                  Academic Validity
-                </span>
-                <span className="font-bold text-sky-600 dark:text-sky-400">
-                  {studentData.validUntil}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans uppercase">
-                  Approved Corridor
-                </span>
-                <span className="font-bold text-slate-900 dark:text-white truncate block">
-                  {studentData.from || 'Thrissur'} ⇄ {studentData.to || 'Ernakulam'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-sans uppercase">
-                  Concession Rates
-                </span>
-                <span className="font-bold text-teal-600 dark:text-teal-400">
-                  80% KSRTC / 50% Metro
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive QR Credentials Box */}
-          <div className="bg-slate-50 dark:bg-[#111722] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="material-symbols-outlined text-[20px] text-sky-500">qr_code_2</span>
-                <span className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                  Verification Credentials
-                </span>
-              </div>
-
-              {/* QR Mode Switcher */}
-              <div className="inline-flex p-0.5 bg-slate-200 dark:bg-slate-800 rounded-lg text-[11px] font-bold">
-                <button
-                  onClick={() => setQrType('concession')}
-                  className={`px-2.5 py-1 rounded-md transition-all ${
-                    qrType === 'concession'
-                      ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  Concession QR
-                </button>
-                <button
-                  onClick={() => setQrType('institutional')}
-                  className={`px-2.5 py-1 rounded-md transition-all ${
-                    qrType === 'institutional'
-                      ? 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  Permanent ID QR
-                </button>
-              </div>
-            </div>
-
-            {/* QR View Details */}
-            {qrType === 'concession' ? (
-              <div className="flex items-center space-x-3 bg-white dark:bg-[#0D1118] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="p-2 bg-white rounded-lg border border-slate-200 shrink-0">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=YAATHRI:${studentData.passNumber || 'SCP-2026-00124'}:${studentData.securityKey || 'KL08'}`}
-                    alt="Concession QR"
-                    className="w-16 h-16"
-                  />
-                </div>
-                <div className="text-xs space-y-1 overflow-hidden">
-                  <div className="font-bold font-mono text-slate-900 dark:text-white truncate">
-                    {studentData.passNumber || 'SCP-2026-00124'}
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                    Standard cryptographic concession barcode for conductor onboard inspection and RTO checkpoints.
-                  </p>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(studentData.passNumber || 'SCP-2026-00124');
-                      showToast('Pass ID copied to clipboard');
-                    }}
-                    className="text-[10px] text-sky-600 dark:text-sky-400 font-bold hover:underline inline-flex items-center space-x-1"
-                  >
-                    <span className="material-symbols-outlined text-[13px]">content_copy</span>
-                    <span>Copy Pass ID</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3 bg-white dark:bg-[#0D1118] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div className="p-2 bg-white rounded-lg border border-slate-200 shrink-0">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${instQrCode}`}
-                    alt="Institutional QR"
-                    className="w-16 h-16"
-                  />
-                </div>
-                <div className="text-xs space-y-1 overflow-hidden">
-                  <div className="font-bold font-mono text-teal-600 dark:text-teal-400 truncate text-[11px]">
-                    {instQrCode}
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                    <strong>Permanent Institutional ID:</strong> Opaque random identifier protecting privacy (no raw name, phone, or home address embedded). Remains valid for your college ID card.
-                  </p>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(instQrCode);
-                      showToast('Permanent Institutional QR identifier copied');
-                    }}
-                    className="text-[10px] text-teal-600 dark:text-teal-400 font-bold hover:underline inline-flex items-center space-x-1"
-                  >
-                    <span className="material-symbols-outlined text-[13px]">content_copy</span>
-                    <span>Copy Identifier</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* One-Time Single-Use Travel Token Generator */}
-          <div className="bg-gradient-to-r from-sky-50 to-teal-50 dark:from-sky-950/30 dark:to-teal-950/30 p-5 rounded-2xl border border-sky-200 dark:border-sky-900/60 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="material-symbols-outlined text-[20px] text-sky-600 dark:text-sky-400">
-                  timer
-                </span>
-                <span className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                  One-Time Turnstile Travel Token
-                </span>
-              </div>
-              <span className="text-[10px] font-mono font-bold bg-sky-200/60 dark:bg-sky-900/60 px-2 py-0.5 rounded text-sky-900 dark:text-sky-200">
-                SINGLE USE • 90 SEC
-              </span>
-            </div>
-
-            {travelToken && tokenTimeLeft > 0 ? (
-              <div className="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-sky-300 dark:border-sky-700/60 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-sans">ACTIVE TOKEN CODE</span>
-                    <span className="font-mono text-base font-black text-slate-900 dark:text-white tracking-widest">
-                      {travelToken}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 block font-sans">EXPIRES IN</span>
-                    <span className="font-mono text-base font-bold text-rose-600 dark:text-rose-400 animate-pulse">
-                      {tokenTimeLeft}s
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-sky-500 h-full transition-all duration-1000 ease-linear rounded-full"
-                    style={{ width: `${(tokenTimeLeft / 90) * 100}%` }}
-                  />
-                </div>
-
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between pt-1">
-                  <span>Present at gate or scanner. Single-use only.</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(travelToken);
-                      showToast('Token code copied');
-                    }}
-                    className="text-sky-600 dark:text-sky-400 font-bold hover:underline"
-                  >
-                    Copy Token
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Generate a short-lived, single-use travel token for quick metro turnstiles or conductor handhelds.
-                </p>
-                <button
-                  onClick={handleGenerateTravelToken}
-                  disabled={isGeneratingToken}
-                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow cursor-pointer transition-all active:scale-95 whitespace-nowrap shrink-0 flex items-center space-x-1.5"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {isGeneratingToken ? 'refresh' : 'bolt'}
-                  </span>
-                  <span>{isGeneratingToken ? 'Generating...' : 'Get Travel Token'}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Approved Transit Corridor Interactive Map */}
-      <div className="bg-white/80 dark:bg-[#0D1118]/85 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-          <div>
-            <span className="text-label-caps font-label-caps text-sky-600 dark:text-sky-400 uppercase tracking-widest font-semibold text-xs">
-              APPROVED COMMUTE CORRIDOR
+      {/* 1. STUDENT HERO GREETING BANNER */}
+      <div className="rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2.5">
+            <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+              STUDENT IDENTITY PROFILE
             </span>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-sky-500 text-[20px]">map</span>
-              <span>Transit Corridor Route &amp; Stop Geofence</span>
-            </h3>
+            <Badge variant={isPassActive ? 'success' : 'warning'} size="sm" dot>
+              {studentData?.status || 'ACTIVE'}
+            </Badge>
           </div>
-          <span className="text-xs font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-            {studentData.from || 'Thrissur'} ⇄ {studentData.to || 'Ernakulam'}
-          </span>
+
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            Welcome, {studentData?.name || 'Student'}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              {studentData?.college || 'Christ College of Engineering, Irinjalakuda'}
+            </span>
+            <span>&bull;</span>
+            <span>{studentData?.course || 'B.Tech Computer Science'}</span>
+            <span>&bull;</span>
+            <span className="font-mono text-slate-400">ID: {studentData?.rollNo || 'CCE24CS001'}</span>
+          </div>
         </div>
-        <RouteMap
-          startPoint={studentData.from || studentData.origin || 'Thrissur Central'}
-          endPoint={studentData.to || studentData.destination || 'Ernakulam South'}
-          height="280px"
-        />
+
+        {/* Quick Actions in Hero */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleGenerateTravelToken}
+            isLoading={isGeneratingToken}
+            icon={<span className="material-symbols-outlined text-[18px]">bolt</span>}
+          >
+            {travelToken ? `Token: ${tokenTimeLeft}s` : 'Generate Token'}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="md"
+            onClick={handlePrint}
+            icon={<span className="material-symbols-outlined text-[18px]">print</span>}
+          >
+            Print Pass
+          </Button>
+        </div>
       </div>
-    </section>
+
+      {/* 2. SECTION NAVIGATION TABS */}
+      <div className="flex items-center space-x-2 p-1 rounded-2xl bg-slate-100 dark:bg-[#0E1524] border border-slate-200/80 dark:border-slate-800 max-w-md">
+        <button
+          onClick={() => setActiveSection('pass')}
+          className={`flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            activeSection === 'pass'
+              ? 'bg-white dark:bg-sky-500 text-slate-950 dark:text-slate-950 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+          }`}
+        >
+          Active Digital Pass
+        </button>
+        <button
+          onClick={() => setActiveSection('applications')}
+          className={`flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            activeSection === 'applications'
+              ? 'bg-white dark:bg-sky-500 text-slate-950 dark:text-slate-950 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+          }`}
+        >
+          Applications
+        </button>
+        <button
+          onClick={() => setActiveSection('ledger')}
+          className={`flex-1 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+            activeSection === 'ledger'
+              ? 'bg-white dark:bg-sky-500 text-slate-950 dark:text-slate-950 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+          }`}
+        >
+          Travel Corridor
+        </button>
+      </div>
+
+      {/* 3. ACTIVE SECTION: DIGITAL PASS CENTERPIECE */}
+      {activeSection === 'pass' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          
+          {/* Left: 3D Interactive Concession Card Object */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 sm:p-8 rounded-3xl bg-slate-50/50 dark:bg-[#0B111D]/60 border border-slate-200/80 dark:border-slate-800">
+            <ConcessionPass studentData={studentData} />
+            <p className="text-xs font-mono text-slate-400 mt-4 text-center">
+              Official Holographic Concession Credential &bull; Click to Flip Card
+            </p>
+          </div>
+
+          {/* Right: ID-Card Verification QR (Primary) & Optional Travel Token (Secondary) */}
+          <div className="lg:col-span-6 space-y-6">
+            
+            {/* Primary Everyday Credential: ID-Card QR */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#0B111D] border border-sky-500/30 dark:border-sky-500/20 space-y-4 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sky-500 text-[20px]">badge</span>
+                  <span className="text-xs font-mono font-bold text-sky-600 dark:text-sky-400 uppercase">
+                    PRIMARY EVERYDAY CREDENTIAL
+                  </span>
+                </div>
+                <Badge variant="success" size="sm">
+                  QR READY
+                </Badge>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-800/60 space-y-2">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-800 shrink-0">
+                    <span className="material-symbols-outlined text-sky-500 text-[24px]">qr_code_2</span>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Permanent ID-Card Verification QR
+                    </h4>
+                    <p className="text-xs text-sky-700 dark:text-sky-300 font-semibold">
+                      ✓ Ready for institution ID-card printing / engraving
+                    </p>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      You do <strong>NOT</strong> need to open YAATHRI or generate a QR for daily journeys. Carry your college ID card during normal travel. Conductors scan only when verification is required.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Optional / Secondary: Dynamic Single-Use Token Card */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-slate-400 uppercase">
+                  OPTIONAL METRO / BUS TRAVEL TOKEN
+                </span>
+                <Badge variant={travelToken ? 'success' : 'neutral'} size="sm" dot>
+                  {travelToken ? `ACTIVE (${tokenTimeLeft}s)` : 'STANDBY'}
+                </Badge>
+              </div>
+
+              {travelToken ? (
+                <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 text-center space-y-2">
+                  <p className="text-xs font-mono text-emerald-700 dark:text-emerald-300">
+                    SINGLE-ENTRY TRAVEL TOKEN CODE (BACKUP / TURNSTILE)
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-emerald-600 dark:text-emerald-400">
+                    {travelToken}
+                  </p>
+                  <div className="w-full bg-emerald-200/50 dark:bg-emerald-900/50 h-1.5 rounded-full overflow-hidden mt-3">
+                    <div
+                      className="bg-emerald-500 h-full transition-all duration-1000 ease-linear"
+                      style={{ width: `${(tokenTimeLeft / 90) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Backup token code for turnstiles or conductor spot checks. Automatically expires in {tokenTimeLeft} seconds.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-[#0E1524] border border-slate-200/80 dark:border-slate-800 text-center space-y-3">
+                  <span className="material-symbols-outlined text-[32px] text-sky-500">vibration</span>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
+                    Approaching an automated metro turnstile or need instant digital clearance? Generate an optional 90-second dynamic travel token.
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleGenerateTravelToken}
+                    isLoading={isGeneratingToken}
+                  >
+                    Generate Backup Token
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Pass Metadata Matrix */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
+              <span className="text-xs font-mono font-bold text-slate-400 uppercase block">
+                CONCESSION PARAMETERS
+              </span>
+
+              <div className="grid grid-cols-2 gap-4 font-mono text-xs">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0E1524]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Pass Number</span>
+                  <span className="font-bold text-slate-900 dark:text-white truncate block">
+                    {studentData?.passNumber || 'SCP-2026-00124'}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0E1524]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Valid Until</span>
+                  <span className="font-bold text-slate-900 dark:text-white truncate block">
+                    {studentData?.validUntil || '31 / 03 / 2027'}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0E1524]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Concession Corridor</span>
+                  <span className="font-bold text-sky-600 dark:text-sky-400 truncate block">
+                    {studentData?.routeCorridor || 'Thrissur ⇄ Ernakulam'}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#0E1524]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Subsidy Rate</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate block">
+                    {studentData?.subsidyRate || '80% KSRTC / 50% METRO'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800">
+                <span>Cryptographic Key: {studentData?.securityKey || 'KL-08-CCE-9941-X9'}</span>
+                <span className="text-emerald-500 font-bold">SHA-256 Validated</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 4. APPLICATIONS SECTION */}
+      {activeSection === 'applications' && (
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                Application History &amp; Attestations
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Official enrollment status with Christ College &amp; Regional Transport Office
+              </p>
+            </div>
+            <Button variant="primary" size="sm" onClick={onOpenApply}>
+              New Application
+            </Button>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0E1524] border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-mono font-bold">
+                APP
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  Application #{studentData?.applicationId || 'APP-2026-KL-0089'}
+                </p>
+                <p className="text-xs text-slate-500 font-mono">
+                  Corridor: Thrissur ⇄ Ernakulam &bull; Type: Bus &amp; Metro &bull; Enrolled: 2026
+                </p>
+              </div>
+            </div>
+            <Badge variant="success" size="md" dot>
+              APPROVED &amp; ACTIVE
+            </Badge>
+          </div>
+        </div>
+      )}
+
+      {/* 5. TRAVEL CORRIDOR MAP SECTION */}
+      {activeSection === 'ledger' && (
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0B111D] border border-slate-200/80 dark:border-slate-800 space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Approved Transit Corridor
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Authorized stages: {studentData?.routeCorridor || 'Thrissur Central ⇄ Ernakulam South via Aluva Metro Interchange'}
+            </p>
+          </div>
+
+          <div className="w-full h-[400px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            <RouteMap
+              origin={studentData?.origin || 'Thrissur Central'}
+              destination={studentData?.destination || 'Ernakulam South'}
+              viaStops={['Chalakudy', 'Angamaly', 'Aluva']}
+              transportType={studentData?.transportMode || 'Bus & Metro'}
+            />
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }

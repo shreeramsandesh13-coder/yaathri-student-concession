@@ -62,10 +62,15 @@ export function AuthProvider({ children }) {
       localStorage.setItem('yaathri_token', res.access_token);
       localStorage.setItem('yaathri_user', JSON.stringify(res.user));
 
-      const meRes = await api.auth.getMe();
-      setStudent(meRes.student);
-      setInstitution(meRes.institution);
-      setVerifier(meRes.verifier);
+      // Asynchronously populate profile entities so role transition is immediate
+      api.auth.getMe().then((meRes) => {
+        if (meRes) {
+          setStudent(meRes.student || null);
+          setInstitution(meRes.institution || null);
+          setVerifier(meRes.verifier || null);
+        }
+      }).catch((e) => console.warn('Background getMe notice:', e));
+
       return res;
     } catch (err) {
       setAuthError(err.message || 'Login failed.');
@@ -85,10 +90,14 @@ export function AuthProvider({ children }) {
       localStorage.setItem('yaathri_token', res.access_token);
       localStorage.setItem('yaathri_user', JSON.stringify(res.user));
 
-      const meRes = await api.auth.getMe();
-      setStudent(meRes.student);
-      setInstitution(meRes.institution);
-      setVerifier(meRes.verifier);
+      api.auth.getMe().then((meRes) => {
+        if (meRes) {
+          setStudent(meRes.student || null);
+          setInstitution(meRes.institution || null);
+          setVerifier(meRes.verifier || null);
+        }
+      }).catch((e) => console.warn('Background getMe notice:', e));
+
       return res;
     } catch (err) {
       setAuthError(err.message || 'Registration failed.');

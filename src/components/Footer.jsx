@@ -1,93 +1,121 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import YaathriLogo from './YaathriLogo';
 
 /**
- * Footer component:
- * - Official branding & portal attribution
- * - Regulatory compliance & emergency helpline
- * - Clean fintech footer adapted for Light and Dark themes
+ * FOOTER COMPONENT
+ * Editorial links connecting public information, guides, corridors, and role-specific portals.
  */
-export default function Footer({ onOpenApply, onGoVerify, onGoPass }) {
+export default function Footer() {
   return (
-    <footer className="border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#070A10]/90 backdrop-blur-md pt-12 pb-24 md:pb-12 text-slate-500 dark:text-slate-400 text-sm transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand Col */}
-          <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center space-x-3">
-              <YaathriLogo variant="full" />
-              <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded font-mono text-slate-700 dark:text-slate-300">
-                v2.0
-              </span>
-            </div>
-            <p className="text-xs font-bold tracking-widest text-teal-600 dark:text-teal-400 uppercase">
-              ONE PASS • A BRIGHTER JOURNEY
+    <footer className="w-full bg-white dark:bg-[#060B14] border-t border-slate-200/80 dark:border-slate-800/80 py-12 sm:py-16 text-slate-600 dark:text-slate-400 text-xs transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 pb-12 border-b border-slate-100 dark:border-slate-800/60">
+          
+          {/* Brand Column */}
+          <div className="md:col-span-5 space-y-4">
+            <YaathriLogo variant="full" />
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+              Unified Digital Student Concession Mobility Platform. One pass for connected transit across KSRTC bus fleets, Kochi Metro Line 1, and accredited Kerala educational institutions.
             </p>
-            <p className="text-body-sm font-body-sm text-slate-500 dark:text-slate-400 max-w-sm">
-              PEOPLE • PLACES • PROGRESS — Unified digital student concession mobility platform. Integrated with Kerala State Road Transport Corporation (KSRTC) and Kochi Metro Rail Limited (KMRL).
-            </p>
-            <div className="flex items-center space-x-2 text-xs font-mono text-sky-600 dark:text-sky-400 pt-1">
-              <span className="material-symbols-outlined text-[16px]">verified_user</span>
-              <span>RTO KERALA NODE • 256-BIT ENCRYPTED</span>
+            <div className="inline-flex items-center space-x-2 text-[11px] font-mono text-slate-400 dark:text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>KERALA MOTOR VEHICLES DEPARTMENT (MVD) &bull; KSRTC &bull; KMRL</span>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="space-y-2">
-            <div className="text-label-caps font-label-caps uppercase text-slate-900 dark:text-white tracking-wider font-bold">
-              Pass Services
-            </div>
-            <ul className="space-y-1.5 text-body-sm font-body-sm">
+          {/* Product & Discovery Links */}
+          <div className="md:col-span-2 space-y-3">
+            <p className="text-xs font-mono font-bold tracking-widest uppercase text-slate-900 dark:text-white">
+              Platform
+            </p>
+            <ul className="space-y-2">
               <li>
-                <button
-                  onClick={onOpenApply}
-                  className="hover:text-slate-900 dark:hover:text-white transition-colors text-left"
-                >
-                  Apply For Pass
-                </button>
+                <Link to="/how-it-works" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  How It Works
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={onGoPass}
-                  className="hover:text-slate-900 dark:hover:text-white transition-colors text-left"
-                >
-                  View 3D Digital Card
-                </button>
+                <Link to="/transport" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Transport Ecosystem
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={onGoVerify}
-                  className="hover:text-slate-900 dark:hover:text-white transition-colors text-left"
-                >
-                  Verify Concession
-                </button>
+                <Link to="/verification" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  0.3s Verification
+                </Link>
               </li>
               <li>
-                <span className="text-slate-400 dark:text-slate-600">Semester Renewal</span>
+                <Link to="/routes" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Corridor Map
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  About YAATHRI
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Institutional Support */}
-          <div className="space-y-2">
-            <div className="text-label-caps font-label-caps uppercase text-slate-900 dark:text-white tracking-wider font-bold">
-              Support &amp; Helpline
-            </div>
-            <div className="space-y-1 text-xs">
-              <div className="text-slate-900 dark:text-white font-semibold">Toll-Free Concession Desk:</div>
-              <div className="font-mono text-sky-600 dark:text-sky-400 text-sm font-bold">1800-425-5372</div>
-              <div className="text-slate-400 dark:text-slate-500 pt-1">Mon – Sat: 08:00 AM – 06:00 PM</div>
-              <div className="text-slate-400 dark:text-slate-500">support@transit.kerala.gov.in</div>
+          {/* Dedicated Portals */}
+          <div className="md:col-span-2 space-y-3">
+            <p className="text-xs font-mono font-bold tracking-widest uppercase text-slate-900 dark:text-white">
+              Portals
+            </p>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/student" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Student Portal
+                </Link>
+              </li>
+              <li>
+                <Link to="/institution" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Institution Desk
+                </Link>
+              </li>
+              <li>
+                <Link to="/verifier" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Conductor Terminal
+                </Link>
+              </li>
+              <li>
+                <Link to="/rto" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  RTO Authority
+                </Link>
+              </li>
+              <li>
+                <Link to="/login" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Sign In
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal / Security */}
+          <div className="md:col-span-3 space-y-3">
+            <p className="text-xs font-mono font-bold tracking-widest uppercase text-slate-900 dark:text-white">
+              Security &amp; Integrity
+            </p>
+            <p className="text-xs leading-relaxed text-slate-500">
+              Passes are cryptographically signed with offline verification capability. QR codes contain opaque tokens with zero personal data leakage.
+            </p>
+            <div className="pt-1">
+              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1.5">
+                <span className="material-symbols-outlined text-[14px]">lock</span>
+                <span>SHA-256 Token Encryption</span>
+              </span>
             </div>
           </div>
+
         </div>
 
-        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <div>
-            © {new Date().getFullYear()} Government of Kerala Motor Vehicles Department &amp; Higher Education Council.
-          </div>
-          <div className="font-mono text-[11px] text-slate-400 dark:text-slate-600">
-            SECURE AUDIT HASH: KL-08-CCE-9941-X9
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400 text-[11px]">
+          <p>© {new Date().getFullYear()} Government of Kerala. Transport Department Mobility Directorate. All rights reserved.</p>
+          <div className="flex items-center space-x-6">
+            <span className="hover:text-slate-600 dark:hover:text-slate-300">Privacy Policy</span>
+            <span className="hover:text-slate-600 dark:hover:text-slate-300">Terms of Concession</span>
+            <span className="hover:text-slate-600 dark:hover:text-slate-300">MVD Directorate</span>
           </div>
         </div>
       </div>

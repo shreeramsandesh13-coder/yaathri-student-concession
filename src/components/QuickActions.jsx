@@ -64,12 +64,12 @@ export default function QuickActions({ onOpenApply, onGoPass, onGoVerify, onOpen
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {actions.map((act) => (
           <div
             key={act.id}
             onClick={act.onClick}
-            className="bg-white/80 dark:bg-[#111722]/90 backdrop-blur-md rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-sky-500/10 hover:border-sky-500/50 dark:hover:border-sky-500/50 transition-all duration-300 group cursor-pointer flex flex-col justify-between h-64"
+            className="bg-white/80 dark:bg-[#111722]/90 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-sky-500/10 hover:border-sky-500/50 dark:hover:border-sky-500/50 transition-all duration-300 group cursor-pointer flex flex-col justify-between min-h-[210px] sm:h-64"
           >
             <div>
               <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#161F2E] text-slate-800 dark:text-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
